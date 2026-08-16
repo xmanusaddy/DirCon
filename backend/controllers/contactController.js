@@ -8,9 +8,9 @@ const getContacts = async (req, res, next) => {
 
         let filter = {};
 
-        if (search) {
+        if (search && search.trim()) {
             filter.name = {
-                $regex: search,
+                $regex: search.trim(),
                 $options: "i"
             };
         }
@@ -72,11 +72,11 @@ const createContact = async (req, res, next) => {
         }
 
         const contact = await Contact.create({
-            name,
-            phone,
-            email,
-            company,
-            notes
+            name: name.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
+            company: company ? company.trim() : "",
+            notes: notes ? notes.trim() : ""
         });
 
         res.status(201).json({
@@ -122,11 +122,11 @@ const updateContact = async (req, res, next) => {
         const contact = await Contact.findByIdAndUpdate(
             id,
             {
-                name,
-                phone,
-                email,
-                company,
-                notes
+                name: name.trim(),
+                phone: phone.trim(),
+                email: email.trim(),
+                company: company ? company.trim() : "",
+                notes: notes ? notes.trim() : ""
             },
             {
                 new: true,
