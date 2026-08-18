@@ -21,24 +21,32 @@
         <span class="brand__name">Dir<span>Con</span></span>
       </a>
 
-      <button class="btn btn--primary btn--topbar" id="newContactButton" type="button">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-        </svg>
-        <span class="label-full">Nuevo contacto</span>
-        <span class="label-short">Nuevo</span>
-      </button>
+      <div class="topbar__actions">
+        <label class="sr-only" id="languageSelectLabel" for="languageSelect">Idioma</label>
+        <select class="language-select" id="languageSelect" aria-label="Idioma">
+          <option value="es">ES</option>
+          <option value="en">EN</option>
+        </select>
+
+        <button class="btn btn--primary btn--topbar" id="newContactButton" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          <span class="label-full" id="newContactLabelFull">Nuevo contacto</span>
+          <span class="label-short" id="newContactLabelShort">Nuevo</span>
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="page">
-    <section class="page__intro" aria-labelledby="pageTitle">
+    <section class="page__intro" id="pageIntro" aria-labelledby="pageTitle">
       <h1 id="pageTitle">Tus contactos</h1>
-      <p>Todo el mundo importante, en un solo lugar.</p>
+      <p id="pageSubtitle">Todo el mundo importante, en un solo lugar.</p>
       <p class="contact-count" id="contactCount" aria-live="polite"></p>
     </section>
 
-    <section class="search-panel" aria-label="Buscar contactos">
+    <section class="search-panel" id="searchPanel" aria-label="Buscar contactos">
       <div class="search-box">
         <svg class="search-box__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>

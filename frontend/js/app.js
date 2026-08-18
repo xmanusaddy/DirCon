@@ -9,11 +9,184 @@
     { bg: "#fde6d8", text: "#b84d22" }
   ];
 
+  const LANGUAGE_STORAGE_KEY = "dircon.language";
+
+  const translations = {
+    es: {
+      brandAria: "DirCon inicio",
+      languageLabel: "Idioma",
+      newContactFull: "Nuevo contacto",
+      newContactShort: "Nuevo",
+      pageTitle: "Tus contactos",
+      pageSubtitle: "Todo el mundo importante, en un solo lugar.",
+      searchRegion: "Buscar contactos",
+      searchPlaceholder: "Buscar por nombre...",
+      clearSearch: "Limpiar busqueda",
+      contactSingular: "contacto",
+      contactPlural: "contactos",
+      loadingContacts: "Cargando contactos...",
+      viewContact: "Ver contacto",
+      emptyTitle: "Todavía no tienes contactos",
+      emptyBody: "Agrega tu primer contacto para comenzar a organizar tu directorio.",
+      noResultsTitle: "No encontramos",
+      noResultsBody: "Prueba buscando con un nombre diferente o revisa la ortografía.",
+      errorTitle: "No pudimos conectar con DirCon",
+      errorFallback: "Comprueba que el backend esté encendido e inténtalo nuevamente.",
+      retry: "Reintentar",
+      drawerLabel: "Contacto",
+      drawerAria: "Detalles de {name}",
+      closePanel: "Cerrar panel",
+      phoneLabel: "Teléfono",
+      emailLabel: "Correo electrónico",
+      notesLabel: "Notas",
+      addedOn: "Agregado el {date}",
+      editContact: "Editar contacto",
+      deleteContact: "Eliminar contacto",
+      createTitle: "Nuevo contacto",
+      editTitle: "Editar contacto",
+      createHelp: "Los campos marcados con * son obligatorios.",
+      close: "Cerrar",
+      nameLabel: "Nombre",
+      companyLabel: "Empresa",
+      namePlaceholder: "Ana Martinez",
+      phonePlaceholder: "809-555-0100",
+      emailPlaceholder: "ana@email.com",
+      companyPlaceholder: "Nombre de la empresa",
+      notesPlaceholder: "Agrega una nota sobre este contacto...",
+      cancel: "Cancelar",
+      saveContact: "Guardar contacto",
+      saveChanges: "Guardar cambios",
+      saving: "Guardando...",
+      deleteDialogAria: "Confirmar eliminación",
+      deleteWarning: "Esta acción eliminará el contacto de forma permanente y no se puede deshacer.",
+      deleteAction: "Eliminar",
+      deleting: "Eliminando...",
+      nameRequired: "El nombre es obligatorio",
+      phoneRequired: "El teléfono es obligatorio",
+      emailRequired: "El correo es obligatorio",
+      invalidEmail: "El correo no tiene un formato válido",
+      createdToast: "Contacto creado correctamente",
+      updatedToast: "Contacto actualizado correctamente",
+      deletedToast: "Contacto eliminado correctamente",
+      loadContactError: "No se pudo cargar el contacto",
+      saveContactError: "No se pudo guardar el contacto",
+      deleteContactError: "No se pudo eliminar el contacto",
+      copy: "Copiar",
+      copied: "Copiado",
+      copyPhone: "Copiar teléfono",
+      copyEmail: "Copiar correo electrónico",
+      copyError: "No se pudo copiar",
+      requestError: "No se pudo completar la solicitud",
+      idInvalid: "ID de contacto no valido",
+      notFound: "Contacto no encontrado",
+      nameType: "El nombre debe ser una cadena de texto",
+      phoneType: "El telefono debe ser una cadena de texto",
+      emailType: "El correo debe ser una cadena de texto",
+      companyType: "La empresa debe ser una cadena de texto",
+      notesType: "Las notas deben ser una cadena de texto",
+      serverError: "Error interno del servidor"
+    },
+    en: {
+      brandAria: "DirCon home",
+      languageLabel: "Language",
+      newContactFull: "New contact",
+      newContactShort: "New",
+      pageTitle: "Your contacts",
+      pageSubtitle: "Everyone important, in one place.",
+      searchRegion: "Search contacts",
+      searchPlaceholder: "Search by name...",
+      clearSearch: "Clear search",
+      contactSingular: "contact",
+      contactPlural: "contacts",
+      loadingContacts: "Loading contacts...",
+      viewContact: "View contact",
+      emptyTitle: "You do not have contacts yet",
+      emptyBody: "Add your first contact to start organizing your directory.",
+      noResultsTitle: "We did not find",
+      noResultsBody: "Try searching with a different name or check the spelling.",
+      errorTitle: "We could not connect to DirCon",
+      errorFallback: "Make sure the backend is running and try again.",
+      retry: "Retry",
+      drawerLabel: "Contact",
+      drawerAria: "Details for {name}",
+      closePanel: "Close panel",
+      phoneLabel: "Phone",
+      emailLabel: "Email",
+      notesLabel: "Notes",
+      addedOn: "Added on {date}",
+      editContact: "Edit contact",
+      deleteContact: "Delete contact",
+      createTitle: "New contact",
+      editTitle: "Edit contact",
+      createHelp: "Fields marked with * are required.",
+      close: "Close",
+      nameLabel: "Name",
+      companyLabel: "Company",
+      namePlaceholder: "Ana Martinez",
+      phonePlaceholder: "809-555-0100",
+      emailPlaceholder: "ana@email.com",
+      companyPlaceholder: "Company name",
+      notesPlaceholder: "Add a note about this contact...",
+      cancel: "Cancel",
+      saveContact: "Save contact",
+      saveChanges: "Save changes",
+      saving: "Saving...",
+      deleteDialogAria: "Confirm deletion",
+      deleteWarning: "This action will permanently delete the contact and cannot be undone.",
+      deleteAction: "Delete",
+      deleting: "Deleting...",
+      nameRequired: "Name is required",
+      phoneRequired: "Phone is required",
+      emailRequired: "Email is required",
+      invalidEmail: "Email format is invalid",
+      createdToast: "Contact created successfully",
+      updatedToast: "Contact updated successfully",
+      deletedToast: "Contact deleted successfully",
+      loadContactError: "Could not load the contact",
+      saveContactError: "Could not save the contact",
+      deleteContactError: "Could not delete the contact",
+      copy: "Copy",
+      copied: "Copied",
+      copyPhone: "Copy phone",
+      copyEmail: "Copy email",
+      copyError: "Could not copy",
+      requestError: "Could not complete the request",
+      idInvalid: "Invalid contact ID",
+      notFound: "Contact not found",
+      nameType: "Name must be a text string",
+      phoneType: "Phone must be a text string",
+      emailType: "Email must be a text string",
+      companyType: "Company must be a text string",
+      notesType: "Notes must be a text string",
+      serverError: "Internal server error"
+    }
+  };
+
+  const apiErrorTranslations = {
+    "ID de contacto no valido": "idInvalid",
+    "Contacto no encontrado": "notFound",
+    "El nombre es obligatorio": "nameRequired",
+    "El telefono es obligatorio": "phoneRequired",
+    "El teléfono es obligatorio": "phoneRequired",
+    "El correo es obligatorio": "emailRequired",
+    "El correo no tiene un formato valido": "invalidEmail",
+    "El correo no tiene un formato válido": "invalidEmail",
+    "El nombre debe ser una cadena de texto": "nameType",
+    "El telefono debe ser una cadena de texto": "phoneType",
+    "El teléfono debe ser una cadena de texto": "phoneType",
+    "El correo debe ser una cadena de texto": "emailType",
+    "La empresa debe ser una cadena de texto": "companyType",
+    "Las notas deben ser una cadena de texto": "notesType",
+    "Error interno del servidor": "serverError",
+    "No se pudo completar la solicitud": "requestError"
+  };
+
   const state = {
     contacts: [],
     status: "loading",
     errorMessage: "",
     currentSearch: "",
+    language: getStoredLanguage(),
     selectedContact: null,
     drawerAnimationUntil: 0,
     drawerIsClosing: false,
@@ -34,8 +207,50 @@
     drawerRoot: document.querySelector("#drawerRoot"),
     modalRoot: document.querySelector("#modalRoot"),
     toastRoot: document.querySelector("#toastRoot"),
-    newContactButton: document.querySelector("#newContactButton")
+    newContactButton: document.querySelector("#newContactButton"),
+    newContactLabelFull: document.querySelector("#newContactLabelFull"),
+    newContactLabelShort: document.querySelector("#newContactLabelShort"),
+    languageSelect: document.querySelector("#languageSelect"),
+    languageSelectLabel: document.querySelector("#languageSelectLabel"),
+    pageTitle: document.querySelector("#pageTitle"),
+    pageSubtitle: document.querySelector("#pageSubtitle"),
+    searchPanel: document.querySelector("#searchPanel"),
+    brand: document.querySelector(".brand")
   };
+
+  function getStoredLanguage() {
+    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return storedLanguage === "en" ? "en" : "es";
+  }
+
+  function t(key, values = {}) {
+    const text = translations[state.language][key] || translations.es[key] || key;
+    return Object.entries(values).reduce(
+      (current, [name, value]) => current.replaceAll(`{${name}}`, value),
+      text
+    );
+  }
+
+  function translateErrorMessage(message) {
+    const key = apiErrorTranslations[message];
+    return key ? t(key) : message;
+  }
+
+  function updateStaticTexts() {
+    document.documentElement.lang = state.language;
+    document.title = "DirCon";
+    dom.brand.setAttribute("aria-label", t("brandAria"));
+    dom.languageSelect.value = state.language;
+    dom.languageSelect.setAttribute("aria-label", t("languageLabel"));
+    dom.languageSelectLabel.textContent = t("languageLabel");
+    dom.newContactLabelFull.textContent = t("newContactFull");
+    dom.newContactLabelShort.textContent = t("newContactShort");
+    dom.pageTitle.textContent = t("pageTitle");
+    dom.pageSubtitle.textContent = t("pageSubtitle");
+    dom.searchPanel.setAttribute("aria-label", t("searchRegion"));
+    dom.searchInput.placeholder = t("searchPlaceholder");
+    dom.clearSearch.setAttribute("aria-label", t("clearSearch"));
+  }
 
   function emptyForm() {
     return {
@@ -80,13 +295,13 @@
   }
 
   function plural(count) {
-    return `${count} ${count === 1 ? "contacto" : "contactos"}`;
+    return `${count} ${count === 1 ? t("contactSingular") : t("contactPlural")}`;
   }
 
   function formatDate(iso) {
     if (!iso) return "";
     try {
-      return new Date(iso).toLocaleDateString("es-ES", {
+      return new Date(iso).toLocaleDateString(state.language === "en" ? "en-US" : "es-ES", {
         day: "numeric",
         month: "long",
         year: "numeric"
@@ -116,14 +331,15 @@
     } catch (error) {
       state.status = "error";
       state.errorMessage = error.message === "Failed to fetch"
-        ? "Comprueba que el backend esté encendido e inténtalo nuevamente."
-        : error.message || "No pudimos conectar con DirCon";
+        ? t("errorFallback")
+        : translateErrorMessage(error.message) || t("errorTitle");
     }
 
     render();
   }
 
   function render() {
+    updateStaticTexts();
     renderCount();
     renderSearch();
     renderContent();
@@ -139,7 +355,7 @@
     }
 
     if (state.status === "loading") {
-      dom.count.textContent = "Cargando contactos...";
+      dom.count.textContent = t("loadingContacts");
       return;
     }
 
@@ -208,7 +424,7 @@
         </span>
         <span class="contact-card__phone">${escapeHtml(contact.phone)}</span>
         <span class="contact-card__link">
-          Ver contacto
+          ${t("viewContact")}
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
             <path d="M1.5 5.5h8M6 2l3.5 3.5L6 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
@@ -228,13 +444,13 @@
             <path d="M19.5 27c0-3.038 1.567-5.5 3.5-5.5s3.5 2.462 3.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.5"></path>
           </svg>
         </span>
-        <h2>Todavía no tienes contactos</h2>
-        <p>Agrega tu primer contacto para comenzar a organizar tu directorio.</p>
+        <h2>${t("emptyTitle")}</h2>
+        <p>${t("emptyBody")}</p>
         <button class="btn btn--primary" type="button" data-action="new-contact">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
           </svg>
-          Nuevo contacto
+          ${t("newContactFull")}
         </button>
       </div>
     `;
@@ -250,8 +466,8 @@
             <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0.5"></path>
           </svg>
         </span>
-        <h2>No encontramos <span class="highlight">"${escapeHtml(query)}"</span></h2>
-        <p>Prueba buscando con un nombre diferente o revisa la ortografía.</p>
+        <h2>${t("noResultsTitle")} <span class="highlight">"${escapeHtml(query)}"</span></h2>
+        <p>${t("noResultsBody")}</p>
       </div>
     `;
   }
@@ -267,14 +483,14 @@
             <path d="M15 13v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
           </svg>
         </span>
-        <h2>No pudimos conectar con DirCon</h2>
-        <p>${escapeHtml(state.errorMessage || "Comprueba que el backend esté encendido e inténtalo nuevamente.")}</p>
+        <h2>${t("errorTitle")}</h2>
+        <p>${escapeHtml(state.errorMessage || t("errorFallback"))}</p>
         <button class="btn btn--outline" type="button" data-action="retry">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M2 7a5 5 0 019.5-2.2M12 7a5 5 0 01-9.5 2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
             <path d="M11.5 2v2.5H9M2.5 12V9.5H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
-          Reintentar
+          ${t("retry")}
         </button>
       </div>
     `;
@@ -299,7 +515,7 @@
       state.selectedContact = await api.getContactById(id);
       render();
     } catch (error) {
-      showToast(error.message || "No se pudo cargar el contacto", "error");
+      showToast(error.message ? translateErrorMessage(error.message) : t("loadContactError"), "error");
       state.selectedContact = null;
       state.drawerAnimationUntil = 0;
       state.drawerIsClosing = false;
@@ -347,10 +563,10 @@
 
     dom.drawerRoot.innerHTML = `
       <div class="backdrop ${backdropAnimationClass}" data-action="close-drawer"></div>
-      <aside class="drawer ${drawerAnimationClass}" role="dialog" aria-label="Detalles de ${escapeHtml(contact.name)}">
+      <aside class="drawer ${drawerAnimationClass}" role="dialog" aria-label="${escapeHtml(t("drawerAria", { name: contact.name }))}">
         <div class="drawer__header">
-          <span class="drawer__eyebrow">Contacto</span>
-          <button class="icon-button" type="button" data-action="close-drawer" aria-label="Cerrar panel">
+          <span class="drawer__eyebrow">${t("drawerLabel")}</span>
+          <button class="icon-button" type="button" data-action="close-drawer" aria-label="${t("closePanel")}">
             ${iconClose(18)}
           </button>
         </div>
@@ -362,20 +578,20 @@
         </div>
 
         <div class="drawer__details">
-          ${contactField("Teléfono", contact.phone, iconPhone(), `tel:${contact.phone}`, "phone")}
-          ${contactField("Correo electrónico", contact.email, iconMail(), `mailto:${contact.email}`, "email")}
+          ${contactField(t("phoneLabel"), contact.phone, iconPhone(), `tel:${contact.phone}`, "phone")}
+          ${contactField(t("emailLabel"), contact.email, iconMail(), `mailto:${contact.email}`, "email")}
           ${contact.notes ? `
             <div class="notes-block">
-              <p class="notes-block__label">Notas</p>
+              <p class="notes-block__label">${t("notesLabel")}</p>
               <p class="notes-block__text">${escapeHtml(contact.notes)}</p>
             </div>
           ` : ""}
-          ${contact.createdAt ? `<p class="drawer__date">Agregado el ${escapeHtml(formatDate(contact.createdAt))}</p>` : ""}
+          ${contact.createdAt ? `<p class="drawer__date">${escapeHtml(t("addedOn", { date: formatDate(contact.createdAt) }))}</p>` : ""}
         </div>
 
         <div class="drawer__actions">
-          <button class="btn btn--primary" type="button" data-action="edit-contact">Editar contacto</button>
-          <button class="drawer__delete" type="button" data-action="confirm-delete">Eliminar contacto</button>
+          <button class="btn btn--primary" type="button" data-action="edit-contact">${t("editContact")}</button>
+          <button class="drawer__delete" type="button" data-action="confirm-delete">${t("deleteContact")}</button>
         </div>
       </aside>
     `;
@@ -383,13 +599,15 @@
   }
 
   function contactField(label, value, icon, href, copyType) {
+    const copyLabel = copyType === "phone" ? t("copyPhone") : t("copyEmail");
+
     return `
       <div class="detail-field">
         <p class="detail-field__label">${escapeHtml(label)}</p>
         <div class="detail-field__row">
           <span class="detail-field__icon" aria-hidden="true">${icon}</span>
           <a href="${escapeHtml(href)}">${escapeHtml(value)}</a>
-          <button class="icon-button copy-button" type="button" data-action="copy" data-copy="${copyType}" data-value="${escapeHtml(value)}" aria-label="Copiar ${escapeHtml(label.toLowerCase())}" title="Copiar">
+          <button class="icon-button copy-button" type="button" data-action="copy" data-copy="${copyType}" data-value="${escapeHtml(value)}" aria-label="${escapeHtml(copyLabel)}" title="${t("copy")}">
             ${iconCopy()}
           </button>
         </div>
@@ -424,8 +642,8 @@
 
   function formModal() {
     const isEdit = state.formMode === "edit";
-    const title = isEdit ? "Editar contacto" : "Nuevo contacto";
-    const submitLabel = isEdit ? "Guardar cambios" : "Guardar contacto";
+    const title = isEdit ? t("editTitle") : t("createTitle");
+    const submitLabel = isEdit ? t("saveChanges") : t("saveContact");
     const contact = state.selectedContact;
 
     return `
@@ -436,28 +654,28 @@
             ${isEdit && contact ? avatar(contact.name, "md") : ""}
             <div class="modal__title">
               <h2>${title}</h2>
-              ${!isEdit ? "<p>Los campos marcados con * son obligatorios.</p>" : ""}
+              ${!isEdit ? `<p>${t("createHelp")}</p>` : ""}
             </div>
-            <button class="icon-button" type="button" data-action="close-modal" aria-label="Cerrar">
+            <button class="icon-button" type="button" data-action="close-modal" aria-label="${t("close")}">
               ${iconClose(18)}
             </button>
           </header>
 
           <form class="contact-form" id="contactForm" novalidate>
             <div class="form-stack">
-              ${fieldInput("name", "Nombre", "text", "Ana Martinez", true, "name")}
+              ${fieldInput("name", t("nameLabel"), "text", t("namePlaceholder"), true, "name")}
               <div class="form-grid">
-                ${fieldInput("phone", "Teléfono", "tel", "809-555-0100", true, "tel")}
-                ${fieldInput("email", "Correo electrónico", "email", "ana@email.com", true, "email")}
+                ${fieldInput("phone", t("phoneLabel"), "tel", t("phonePlaceholder"), true, "tel")}
+                ${fieldInput("email", t("emailLabel"), "email", t("emailPlaceholder"), true, "email")}
               </div>
-              ${fieldInput("company", "Empresa", "text", "Nombre de la empresa", false, "organization")}
-              ${fieldTextarea("notes", "Notas", "Agrega una nota sobre este contacto...")}
+              ${fieldInput("company", t("companyLabel"), "text", t("companyPlaceholder"), false, "organization")}
+              ${fieldTextarea("notes", t("notesLabel"), t("notesPlaceholder"))}
             </div>
 
             <div class="form-actions">
-              <button class="btn btn--ghost" type="button" data-action="close-modal" ${state.saving ? "disabled" : ""}>Cancelar</button>
+              <button class="btn btn--ghost" type="button" data-action="close-modal" ${state.saving ? "disabled" : ""}>${t("cancel")}</button>
               <button class="btn btn--primary" type="submit" ${state.saving ? "disabled" : ""}>
-                ${state.saving ? '<span class="spinner" aria-hidden="true"></span> Guardando...' : submitLabel}
+                ${state.saving ? `<span class="spinner" aria-hidden="true"></span> ${t("saving")}` : submitLabel}
               </button>
             </div>
           </form>
@@ -504,7 +722,7 @@
   function deleteModal(contact) {
     return `
       <div class="backdrop backdrop--danger animate-fade-in" data-action="close-modal"></div>
-      <div class="modal-layer modal-layer--danger" role="dialog" aria-modal="true" aria-label="Confirmar eliminación">
+      <div class="modal-layer modal-layer--danger" role="dialog" aria-modal="true" aria-label="${t("deleteDialogAria")}">
         <section class="modal modal--delete animate-scale-in">
           <span class="delete-icon" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -516,11 +734,11 @@
             ${avatar(contact.name, "sm")}
             <h2>${escapeHtml(contact.name)}</h2>
           </div>
-          <p>Esta acción eliminará el contacto de forma permanente y no se puede deshacer.</p>
+          <p>${t("deleteWarning")}</p>
           <div class="delete-actions">
-            <button class="btn btn--ghost" type="button" data-action="close-modal" ${state.saving ? "disabled" : ""}>Cancelar</button>
+            <button class="btn btn--ghost" type="button" data-action="close-modal" ${state.saving ? "disabled" : ""}>${t("cancel")}</button>
             <button class="btn btn--danger" type="button" data-action="delete-contact" ${state.saving ? "disabled" : ""}>
-              ${state.saving ? '<span class="spinner" aria-hidden="true"></span> Eliminando...' : "Eliminar"}
+              ${state.saving ? `<span class="spinner" aria-hidden="true"></span> ${t("deleting")}` : t("deleteAction")}
             </button>
           </div>
         </section>
@@ -566,12 +784,12 @@
 
   function validateForm(data) {
     const errors = {};
-    if (!data.name.trim()) errors.name = "El nombre es obligatorio";
-    if (!data.phone.trim()) errors.phone = "El teléfono es obligatorio";
+    if (!data.name.trim()) errors.name = t("nameRequired");
+    if (!data.phone.trim()) errors.phone = t("phoneRequired");
     if (!data.email.trim()) {
-      errors.email = "El correo es obligatorio";
+      errors.email = t("emailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
-      errors.email = "El correo no tiene un formato válido";
+      errors.email = t("invalidEmail");
     }
     return errors;
   }
@@ -587,19 +805,21 @@
   }
 
   function applyApiError(message) {
-    const field = message.includes("nombre") ? "name"
-      : message.includes("telefono") ? "phone"
-        : message.includes("correo") ? "email"
-          : message.includes("empresa") ? "company"
-            : message.includes("notas") ? "notes"
+    const normalizedMessage = message.toLowerCase();
+    const translatedMessage = translateErrorMessage(message);
+    const field = normalizedMessage.includes("nombre") || normalizedMessage.includes("name") ? "name"
+      : normalizedMessage.includes("telefono") || normalizedMessage.includes("teléfono") || normalizedMessage.includes("phone") ? "phone"
+        : normalizedMessage.includes("correo") || normalizedMessage.includes("email") ? "email"
+          : normalizedMessage.includes("empresa") || normalizedMessage.includes("company") ? "company"
+            : normalizedMessage.includes("notas") || normalizedMessage.includes("notes") ? "notes"
               : null;
 
     if (field) {
-      state.formErrors = { [field]: message };
+      state.formErrors = { [field]: translatedMessage };
       render();
     }
 
-    showToast(message, "error");
+    showToast(translatedMessage, "error");
   }
 
   async function saveContact(event) {
@@ -622,10 +842,10 @@
       const payload = normalizeForm(raw);
       if (state.formMode === "create") {
         await api.createContact(payload);
-        showToast("Contacto creado correctamente");
+        showToast(t("createdToast"));
       } else if (state.selectedContact) {
         state.selectedContact = await api.updateContact(state.selectedContact._id, payload);
-        showToast("Contacto actualizado correctamente");
+        showToast(t("updatedToast"));
       }
 
       state.modal = null;
@@ -633,7 +853,7 @@
       await loadContacts(state.currentSearch);
     } catch (error) {
       state.saving = false;
-      applyApiError(error.message || "No se pudo guardar el contacto");
+      applyApiError(error.message || t("saveContactError"));
       return;
     }
 
@@ -654,10 +874,10 @@
       state.drawerAnimationUntil = 0;
       state.drawerIsClosing = false;
       state.modal = null;
-      showToast("Contacto eliminado correctamente");
+      showToast(t("deletedToast"));
       await loadContacts(state.currentSearch);
     } catch (error) {
-      showToast(error.message || "No se pudo eliminar el contacto", "error");
+      showToast(error.message ? translateErrorMessage(error.message) : t("deleteContactError"), "error");
     }
 
     state.saving = false;
@@ -690,14 +910,14 @@
       await navigator.clipboard.writeText(value);
       button.classList.add("is-copied");
       button.innerHTML = iconCheck();
-      button.title = "Copiado";
+      button.title = t("copied");
       setTimeout(() => {
         button.classList.remove("is-copied");
         button.innerHTML = iconCopy();
-        button.title = "Copiar";
+        button.title = t("copy");
       }, 2000);
     } catch {
-      showToast("No se pudo copiar", "error");
+      showToast(t("copyError"), "error");
     }
   }
 
@@ -760,6 +980,12 @@
   }
 
   dom.newContactButton.addEventListener("click", () => openForm("create"));
+
+  dom.languageSelect.addEventListener("change", (event) => {
+    state.language = event.target.value === "en" ? "en" : "es";
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language);
+    render();
+  });
 
   dom.clearSearch.addEventListener("click", () => {
     state.currentSearch = "";
