@@ -11,8 +11,6 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-connectDB();
-
 app.use(cors());
 app.use(express.json());
 
@@ -26,6 +24,17 @@ app.get("/", (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-    console.log(`Servidor ejecutandose en el puerto ${PORT}`);
-});
+const startServer = async () => {
+    try {
+        await connectDB();
+
+        app.listen(PORT, () => {
+            console.log(`Servidor ejecutandose en el puerto ${PORT}`);
+        });
+    } catch (error) {
+        console.error(error.message);
+        process.exit(1);
+    }
+};
+
+startServer();

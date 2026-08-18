@@ -1,6 +1,57 @@
 const mongoose = require("mongoose");
 const Contact = require("../models/Contact");
 
+const hasField = (body, field) => Object.prototype.hasOwnProperty.call(body, field);
+
+const fieldMessages = {
+    name: {
+        required: "El nombre es obligatorio",
+        type: "El nombre debe ser una cadena de texto"
+    },
+    phone: {
+        required: "El telefono es obligatorio",
+        type: "El telefono debe ser una cadena de texto"
+    },
+    email: {
+        required: "El correo es obligatorio",
+        type: "El correo debe ser una cadena de texto"
+    },
+    company: {
+        type: "La empresa debe ser una cadena de texto"
+    },
+    notes: {
+        type: "Las notas deben ser una cadena de texto"
+    }
+};
+
+const validateStringField = (body, field, options = {}) => {
+    const { required = false, allowEmpty = true } = options;
+
+    if (!hasField(body, field)) {
+        if (required) {
+            return { error: fieldMessages[field].required };
+        }
+
+        return {};
+    }
+
+    const value = body[field];
+
+    if (typeof value !== "string") {
+        return { error: fieldMessages[field].type };
+    }
+
+    const trimmedValue = value.trim();
+
+    if (!allowEmpty && !trimmedValue) {
+        return { error: fieldMessages[field].required };
+    }
+
+    return { value: trimmedValue };
+};
+
+const sendValidationError = (res, message) => res.status(400).json({ message });
+
 // Obtener todos los contactos y buscar por nombre
 const getContacts = async (req, res, next) => {
     try {
@@ -51,32 +102,53 @@ const getContactById = async (req, res, next) => {
 // Crear un contacto
 const createContact = async (req, res, next) => {
     try {
-        const { name, phone, email, company, notes } = req.body;
+        const body = req.body || {};
 
-        if (!name || !name.trim()) {
-            return res.status(400).json({
-                message: "El nombre es obligatorio"
-            });
+        const name = validateStringField(body, "name", {
+            required: true,
+            allowEmpty: false
+        });
+
+        if (name.error) {
+            return sendValidationError(res, name.error);
         }
 
-        if (!phone || !phone.trim()) {
-            return res.status(400).json({
-                message: "El telefono es obligatorio"
-            });
+        const phone = validateStringField(body, "phone", {
+            required: true,
+            allowEmpty: false
+        });
+
+        if (phone.error) {
+            return sendValidationError(res, phone.error);
         }
 
-        if (!email || !email.trim()) {
-            return res.status(400).json({
-                message: "El correo es obligatorio"
-            });
+        const email = validateStringField(body, "email", {
+            required: true,
+            allowEmpty: false
+        });
+
+        if (email.error) {
+            return sendValidationError(res, email.error);
+        }
+
+        const company = validateStringField(body, "company");
+
+        if (company.error) {
+            return sendValidationError(res, company.error);
+        }
+
+        const notes = validateStringField(body, "notes");
+
+        if (notes.error) {
+            return sendValidationError(res, notes.error);
         }
 
         const contact = await Contact.create({
-            name: name.trim(),
-            phone: phone.trim(),
-            email: email.trim(),
-            company: company ? company.trim() : "",
-            notes: notes ? notes.trim() : ""
+            name: name.value,
+            phone: phone.value,
+            email: email.value,
+            company: company.value || "",
+            notes: notes.value || ""
         });
 
         res.status(201).json({
@@ -99,37 +171,48 @@ const updateContact = async (req, res, next) => {
             });
         }
 
-        const { name, phone, email, company, notes } = req.body;
+        const body = req.body || {};
+        const fieldsToValidate = [
+            {
+                name: "name",
+                allowEmpty: false
+            },
+            {
+                name: "phone",
+                allowEmpty: false
+            },
+            {
+                name: "email",
+                allowEmpty: false
+            },
+            {
+                name: "company"
+            },
+            {
+                name: "notes"
+            }
+        ];
+        const updateData = {};
 
-        if (!name || !name.trim()) {
-            return res.status(400).json({
-                message: "El nombre es obligatorio"
+        for (const field of fieldsToValidate) {
+            const result = validateStringField(body, field.name, {
+                allowEmpty: field.allowEmpty
             });
-        }
 
-        if (!phone || !phone.trim()) {
-            return res.status(400).json({
-                message: "El telefono es obligatorio"
-            });
-        }
+            if (result.error) {
+                return sendValidationError(res, result.error);
+            }
 
-        if (!email || !email.trim()) {
-            return res.status(400).json({
-                message: "El correo es obligatorio"
-            });
+            if (hasField(body, field.name)) {
+                updateData[field.name] = result.value;
+            }
         }
 
         const contact = await Contact.findByIdAndUpdate(
             id,
+            updateData,
             {
-                name: name.trim(),
-                phone: phone.trim(),
-                email: email.trim(),
-                company: company ? company.trim() : "",
-                notes: notes ? notes.trim() : ""
-            },
-            {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         );
