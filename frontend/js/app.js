@@ -20,10 +20,27 @@
     { value: "orange", labelKey: "accentOrange" }
   ];
 
+  const themeOptions = [
+    { value: "light", labelKey: "lightTheme" },
+    { value: "dark", labelKey: "darkTheme" }
+  ];
+
+  const languageOptions = [
+    { value: "es", labelKey: "spanishLanguage" },
+    { value: "en", labelKey: "englishLanguage" }
+  ];
+
   const translations = {
     es: {
       brandAria: "DirCon inicio",
       languageLabel: "Idioma",
+      preferencesLabel: "Preferencias",
+      appearanceLabel: "Apariencia",
+      themeLabel: "Tema",
+      lightTheme: "Claro",
+      darkTheme: "Oscuro",
+      spanishLanguage: "Español",
+      englishLanguage: "English",
       accentColor: "Color de acento",
       accentGreen: "Verde",
       accentBlue: "Azul",
@@ -105,6 +122,13 @@
     en: {
       brandAria: "DirCon home",
       languageLabel: "Language",
+      preferencesLabel: "Preferences",
+      appearanceLabel: "Appearance",
+      themeLabel: "Theme",
+      lightTheme: "Light",
+      darkTheme: "Dark",
+      spanishLanguage: "Español",
+      englishLanguage: "English",
       accentColor: "Accent color",
       accentGreen: "Green",
       accentBlue: "Blue",
@@ -235,18 +259,23 @@
     newContactButton: document.querySelector("#newContactButton"),
     newContactLabelFull: document.querySelector("#newContactLabelFull"),
     newContactLabelShort: document.querySelector("#newContactLabelShort"),
-    themeToggle: document.querySelector("#themeToggle"),
-    accentMenu: document.querySelector("#accentMenu"),
-    accentTrigger: document.querySelector("#accentTrigger"),
+    preferencesMenu: document.querySelector("#preferencesMenu"),
+    preferencesTrigger: document.querySelector("#preferencesTrigger"),
+    preferencesTitle: document.querySelector("#preferencesTitle"),
+    appearancePreferencesTitle: document.querySelector("#appearancePreferencesTitle"),
+    themePreferenceLabel: document.querySelector("#themePreferenceLabel"),
+    themeOptions: document.querySelector("#themeOptions"),
+    accentPreferenceLabel: document.querySelector("#accentPreferenceLabel"),
     accentOptions: document.querySelector("#accentOptions"),
-    accentCurrentDot: document.querySelector("#accentCurrentDot"),
-    languageSelect: document.querySelector("#languageSelect"),
-    languageSelectLabel: document.querySelector("#languageSelectLabel"),
+    languagePreferencesTitle: document.querySelector("#languagePreferencesTitle"),
+    languageOptions: document.querySelector("#languageOptions"),
     pageTitle: document.querySelector("#pageTitle"),
     pageSubtitle: document.querySelector("#pageSubtitle"),
     searchPanel: document.querySelector("#searchPanel"),
     brand: document.querySelector(".brand")
   };
+
+  let preferencesCloseTimer = null;
 
   function getStoredLanguage() {
     const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -263,6 +292,21 @@
     return accentOptions.some((option) => option.value === storedAccent)
       ? storedAccent
       : "green";
+  }
+
+  function closePreferencesMenu() {
+    if (!dom.preferencesMenu.open || dom.preferencesMenu.classList.contains("is-closing")) return;
+
+    if (preferencesCloseTimer) {
+      clearTimeout(preferencesCloseTimer);
+    }
+
+    dom.preferencesMenu.classList.add("is-closing");
+    preferencesCloseTimer = setTimeout(() => {
+      dom.preferencesMenu.open = false;
+      dom.preferencesMenu.classList.remove("is-closing");
+      preferencesCloseTimer = null;
+    }, 170);
   }
 
   function t(key, values = {}) {
@@ -283,18 +327,18 @@
     document.documentElement.dataset.theme = state.theme;
     document.documentElement.dataset.accent = state.accent;
     document.title = "DirCon";
-    const themeLabel = state.theme === "dark" ? t("switchToLight") : t("switchToDark");
-    const accentLabel = `${t("accentColor")}: ${t(accentOptions.find((option) => option.value === state.accent).labelKey)}`;
     dom.brand.setAttribute("aria-label", t("brandAria"));
-    dom.themeToggle.setAttribute("aria-label", themeLabel);
-    dom.themeToggle.title = themeLabel;
-    dom.accentTrigger.setAttribute("aria-label", accentLabel);
-    dom.accentTrigger.title = accentLabel;
+    dom.preferencesTrigger.setAttribute("aria-label", t("preferencesLabel"));
+    dom.preferencesTrigger.title = t("preferencesLabel");
+    dom.preferencesTitle.textContent = t("preferencesLabel");
+    dom.appearancePreferencesTitle.textContent = t("appearanceLabel");
+    dom.themePreferenceLabel.textContent = t("themeLabel");
+    dom.accentPreferenceLabel.textContent = t("accentColor");
+    dom.languagePreferencesTitle.textContent = t("languageLabel");
+    renderThemePicker();
     dom.accentOptions.setAttribute("aria-label", t("accentColor"));
     renderAccentPicker();
-    dom.languageSelect.value = state.language;
-    dom.languageSelect.setAttribute("aria-label", t("languageLabel"));
-    dom.languageSelectLabel.textContent = t("languageLabel");
+    renderLanguagePicker();
     dom.newContactLabelFull.textContent = t("newContactFull");
     dom.newContactLabelShort.textContent = t("newContactShort");
     dom.pageTitle.textContent = t("pageTitle");
@@ -304,14 +348,38 @@
     dom.clearSearch.setAttribute("aria-label", t("clearSearch"));
   }
 
+  function renderThemePicker() {
+    dom.themeOptions.innerHTML = themeOptions.map((option) => {
+      const isSelected = option.value === state.theme;
+      const label = t(option.labelKey);
+      return `
+        <button class="segment-button ${isSelected ? "is-selected" : ""}" type="button" data-action="set-theme" data-theme-option="${option.value}" role="radio" aria-checked="${isSelected}">
+          ${escapeHtml(label)}
+        </button>
+      `;
+    }).join("");
+  }
+
   function renderAccentPicker() {
-    dom.accentCurrentDot.className = `accent-menu__dot accent-dot accent-dot--${state.accent}`;
     dom.accentOptions.innerHTML = accentOptions.map((option) => {
       const isSelected = option.value === state.accent;
       const label = t(option.labelKey);
       return `
-        <button class="accent-swatch ${isSelected ? "is-selected" : ""}" type="button" data-action="set-accent" data-accent-option="${option.value}" role="radio" aria-checked="${isSelected}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">
-          <span class="accent-swatch__dot accent-dot accent-dot--${option.value}" aria-hidden="true"></span>
+        <button class="accent-option ${isSelected ? "is-selected" : ""}" type="button" data-action="set-accent" data-accent-option="${option.value}" role="radio" aria-checked="${isSelected}">
+          <span class="accent-dot accent-dot--${option.value}" aria-hidden="true"></span>
+          <span>${escapeHtml(label)}</span>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function renderLanguagePicker() {
+    dom.languageOptions.innerHTML = languageOptions.map((option) => {
+      const isSelected = option.value === state.language;
+      const label = t(option.labelKey);
+      return `
+        <button class="segment-button ${isSelected ? "is-selected" : ""}" type="button" data-action="set-language" data-language-option="${option.value}" role="radio" aria-checked="${isSelected}">
+          ${escapeHtml(label)}
         </button>
       `;
     }).join("");
@@ -1044,18 +1112,16 @@
     `;
   }
 
-  dom.newContactButton.addEventListener("click", () => openForm("create"));
-
-  dom.themeToggle.addEventListener("click", () => {
-    state.theme = state.theme === "dark" ? "light" : "dark";
-    localStorage.setItem(THEME_STORAGE_KEY, state.theme);
-    render();
+  dom.newContactButton.addEventListener("click", () => {
+    closePreferencesMenu();
+    openForm("create");
   });
 
-  dom.languageSelect.addEventListener("change", (event) => {
-    state.language = event.target.value === "en" ? "en" : "es";
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language);
-    render();
+  dom.preferencesTrigger.addEventListener("click", (event) => {
+    if (!dom.preferencesMenu.open) return;
+
+    event.preventDefault();
+    closePreferencesMenu();
   });
 
   dom.clearSearch.addEventListener("click", () => {
@@ -1082,20 +1148,35 @@
   });
 
   document.addEventListener("click", (event) => {
-    if (dom.accentMenu.open && !dom.accentMenu.contains(event.target)) {
-      dom.accentMenu.open = false;
+    if (dom.preferencesMenu.open && !dom.preferencesMenu.contains(event.target)) {
+      closePreferencesMenu();
     }
 
     const actionTarget = event.target.closest("[data-action]");
     if (!actionTarget) return;
 
     const action = actionTarget.dataset.action;
+    if (action === "set-theme") {
+      const theme = actionTarget.dataset.themeOption;
+      if (themeOptions.some((option) => option.value === theme)) {
+        state.theme = theme;
+        localStorage.setItem(THEME_STORAGE_KEY, state.theme);
+        render();
+      }
+    }
     if (action === "set-accent") {
       const accent = actionTarget.dataset.accentOption;
       if (accentOptions.some((option) => option.value === accent)) {
         state.accent = accent;
         localStorage.setItem(ACCENT_STORAGE_KEY, state.accent);
-        dom.accentMenu.open = false;
+        render();
+      }
+    }
+    if (action === "set-language") {
+      const language = actionTarget.dataset.languageOption;
+      if (languageOptions.some((option) => option.value === language)) {
+        state.language = language;
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language);
         render();
       }
     }
@@ -1133,6 +1214,8 @@
     if (event.key !== "Escape") return;
     if (state.modal) {
       closeModal();
+    } else if (dom.preferencesMenu.open) {
+      closePreferencesMenu();
     } else if (state.selectedContact) {
       closeDrawer();
     }
