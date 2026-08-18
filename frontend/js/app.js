@@ -11,11 +11,24 @@
 
   const LANGUAGE_STORAGE_KEY = "dircon.language";
   const THEME_STORAGE_KEY = "dircon.theme";
+  const ACCENT_STORAGE_KEY = "dircon.accent";
+
+  const accentOptions = [
+    { value: "green", labelKey: "accentGreen" },
+    { value: "blue", labelKey: "accentBlue" },
+    { value: "purple", labelKey: "accentPurple" },
+    { value: "orange", labelKey: "accentOrange" }
+  ];
 
   const translations = {
     es: {
       brandAria: "DirCon inicio",
       languageLabel: "Idioma",
+      accentColor: "Color de acento",
+      accentGreen: "Verde",
+      accentBlue: "Azul",
+      accentPurple: "Morado",
+      accentOrange: "Naranja",
       switchToDark: "Cambiar a modo oscuro",
       switchToLight: "Cambiar a modo claro",
       newContactFull: "Nuevo contacto",
@@ -92,6 +105,11 @@
     en: {
       brandAria: "DirCon home",
       languageLabel: "Language",
+      accentColor: "Accent color",
+      accentGreen: "Green",
+      accentBlue: "Blue",
+      accentPurple: "Purple",
+      accentOrange: "Orange",
       switchToDark: "Switch to dark mode",
       switchToLight: "Switch to light mode",
       newContactFull: "New contact",
@@ -193,6 +211,7 @@
     currentSearch: "",
     language: getStoredLanguage(),
     theme: getStoredTheme(),
+    accent: getStoredAccent(),
     selectedContact: null,
     drawerAnimationUntil: 0,
     drawerIsClosing: false,
@@ -217,6 +236,10 @@
     newContactLabelFull: document.querySelector("#newContactLabelFull"),
     newContactLabelShort: document.querySelector("#newContactLabelShort"),
     themeToggle: document.querySelector("#themeToggle"),
+    accentMenu: document.querySelector("#accentMenu"),
+    accentTrigger: document.querySelector("#accentTrigger"),
+    accentOptions: document.querySelector("#accentOptions"),
+    accentCurrentDot: document.querySelector("#accentCurrentDot"),
     languageSelect: document.querySelector("#languageSelect"),
     languageSelectLabel: document.querySelector("#languageSelectLabel"),
     pageTitle: document.querySelector("#pageTitle"),
@@ -235,6 +258,13 @@
     return storedTheme === "dark" ? "dark" : "light";
   }
 
+  function getStoredAccent() {
+    const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
+    return accentOptions.some((option) => option.value === storedAccent)
+      ? storedAccent
+      : "green";
+  }
+
   function t(key, values = {}) {
     const text = translations[state.language][key] || translations.es[key] || key;
     return Object.entries(values).reduce(
@@ -251,11 +281,17 @@
   function updateStaticTexts() {
     document.documentElement.lang = state.language;
     document.documentElement.dataset.theme = state.theme;
+    document.documentElement.dataset.accent = state.accent;
     document.title = "DirCon";
     const themeLabel = state.theme === "dark" ? t("switchToLight") : t("switchToDark");
+    const accentLabel = `${t("accentColor")}: ${t(accentOptions.find((option) => option.value === state.accent).labelKey)}`;
     dom.brand.setAttribute("aria-label", t("brandAria"));
     dom.themeToggle.setAttribute("aria-label", themeLabel);
     dom.themeToggle.title = themeLabel;
+    dom.accentTrigger.setAttribute("aria-label", accentLabel);
+    dom.accentTrigger.title = accentLabel;
+    dom.accentOptions.setAttribute("aria-label", t("accentColor"));
+    renderAccentPicker();
     dom.languageSelect.value = state.language;
     dom.languageSelect.setAttribute("aria-label", t("languageLabel"));
     dom.languageSelectLabel.textContent = t("languageLabel");
@@ -266,6 +302,19 @@
     dom.searchPanel.setAttribute("aria-label", t("searchRegion"));
     dom.searchInput.placeholder = t("searchPlaceholder");
     dom.clearSearch.setAttribute("aria-label", t("clearSearch"));
+  }
+
+  function renderAccentPicker() {
+    dom.accentCurrentDot.className = `accent-menu__dot accent-dot accent-dot--${state.accent}`;
+    dom.accentOptions.innerHTML = accentOptions.map((option) => {
+      const isSelected = option.value === state.accent;
+      const label = t(option.labelKey);
+      return `
+        <button class="accent-swatch ${isSelected ? "is-selected" : ""}" type="button" data-action="set-accent" data-accent-option="${option.value}" role="radio" aria-checked="${isSelected}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">
+          <span class="accent-swatch__dot accent-dot accent-dot--${option.value}" aria-hidden="true"></span>
+        </button>
+      `;
+    }).join("");
   }
 
   function emptyForm() {
@@ -1033,10 +1082,23 @@
   });
 
   document.addEventListener("click", (event) => {
+    if (dom.accentMenu.open && !dom.accentMenu.contains(event.target)) {
+      dom.accentMenu.open = false;
+    }
+
     const actionTarget = event.target.closest("[data-action]");
     if (!actionTarget) return;
 
     const action = actionTarget.dataset.action;
+    if (action === "set-accent") {
+      const accent = actionTarget.dataset.accentOption;
+      if (accentOptions.some((option) => option.value === accent)) {
+        state.accent = accent;
+        localStorage.setItem(ACCENT_STORAGE_KEY, state.accent);
+        dom.accentMenu.open = false;
+        render();
+      }
+    }
     if (action === "close-drawer") closeDrawer();
     if (action === "edit-contact") openForm("edit");
     if (action === "confirm-delete") {

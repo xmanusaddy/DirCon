@@ -7,6 +7,11 @@
   <script>
     (function () {
       try {
+        var accent = localStorage.getItem("dircon.accent");
+        if (["blue", "purple", "orange"].includes(accent)) {
+          document.documentElement.dataset.accent = accent;
+        }
+
         if (localStorage.getItem("dircon.theme") === "dark") {
           document.documentElement.dataset.theme = "dark";
         }
@@ -40,6 +45,13 @@
             <path d="M8.5 1.5v2M8.5 13.5v2M3.55 3.55l1.42 1.42M12.03 12.03l1.42 1.42M1.5 8.5h2M13.5 8.5h2M3.55 13.45l1.42-1.42M12.03 4.97l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
           </svg>
         </button>
+
+        <details class="accent-menu" id="accentMenu">
+          <summary class="accent-menu__trigger" id="accentTrigger" aria-label="Color de acento" title="Color de acento">
+            <span class="accent-menu__dot accent-dot accent-dot--green" id="accentCurrentDot" aria-hidden="true"></span>
+          </summary>
+          <div class="accent-menu__popover" id="accentOptions" role="radiogroup" aria-label="Color de acento"></div>
+        </details>
 
         <label class="sr-only" id="languageSelectLabel" for="languageSelect">Idioma</label>
         <select class="language-select" id="languageSelect" aria-label="Idioma">
