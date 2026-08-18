@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400&display=swap");
 
 :root {
+  color-scheme: light;
   --c-teal: #28b5a5;
   --c-teal-dark: #1e9990;
   --c-teal-light: #e8f7f5;
@@ -19,6 +20,28 @@
   --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.05);
   --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.08);
   --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.14), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --c-teal: #2cc6b5;
+  --c-teal-dark: #55d8ca;
+  --c-teal-light: rgba(44, 198, 181, 0.16);
+  --c-coral: #ff806f;
+  --c-coral-dark: #ff9a8d;
+  --c-coral-light: rgba(255, 128, 111, 0.16);
+  --c-bg: #171916;
+  --c-cream: #252820;
+  --c-card: #20231f;
+  --c-border: #34382f;
+  --c-border-hover: #4d5447;
+  --c-text: #f4f1e9;
+  --c-text-secondary: #d1cec4;
+  --c-text-muted: #a5a296;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.36), 0 1px 0 rgba(255, 255, 255, 0.02);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.36), 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-drawer: -10px 0 36px rgba(0, 0, 0, 0.34);
+  --shadow-modal: 0 28px 72px rgba(0, 0, 0, 0.5), 0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -41,6 +64,7 @@ body {
   font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 button,
@@ -69,6 +93,14 @@ button {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #b0afa9;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #4a4f45;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #636a5e;
 }
 
 :focus-visible {
@@ -104,6 +136,54 @@ button {
   gap: 10px;
 }
 
+.theme-toggle {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-card);
+  color: var(--c-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus {
+  border-color: var(--c-teal);
+  color: var(--c-text);
+  box-shadow: 0 0 0 3px rgba(40, 181, 165, 0.12);
+}
+
+.theme-toggle__icon {
+  position: absolute;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.theme-toggle__icon--moon {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+.theme-toggle__icon--sun {
+  opacity: 0;
+  transform: scale(0.72) rotate(-35deg);
+}
+
+:root[data-theme="dark"] .theme-toggle__icon--moon {
+  opacity: 0;
+  transform: scale(0.72) rotate(35deg);
+}
+
+:root[data-theme="dark"] .theme-toggle__icon--sun {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
 .language-select {
   height: 38px;
   border: 1.5px solid var(--c-border);
@@ -116,6 +196,11 @@ button {
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.language-select option {
+  background: var(--c-card);
+  color: var(--c-text);
 }
 
 .language-select:hover,
@@ -245,6 +330,11 @@ button {
   border-radius: 14px;
   border: 1.5px solid var(--c-border);
   background: var(--c-card);
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .contact-card,
+:root[data-theme="dark"] .skeleton-card {
   box-shadow: var(--shadow-card);
 }
 
@@ -516,6 +606,10 @@ button {
   backdrop-filter: blur(2px);
 }
 
+:root[data-theme="dark"] .backdrop {
+  background: rgba(0, 0, 0, 0.46);
+}
+
 .drawer {
   position: fixed;
   top: 0;
@@ -685,6 +779,14 @@ button {
   background: rgba(28, 28, 26, 0.28);
 }
 
+:root[data-theme="dark"] .backdrop--modal {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .backdrop--danger {
+  background: rgba(0, 0, 0, 0.56);
+}
+
 .modal {
   width: min(520px, 100%);
   max-height: 90vh;
@@ -768,6 +870,11 @@ button {
   outline: none;
   font-size: 14px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--c-text-muted);
 }
 
 .field input {
@@ -889,9 +996,21 @@ button {
   pointer-events: auto;
 }
 
+:root[data-theme="dark"] .toast {
+  background: #2a2e27;
+  color: var(--c-text);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+}
+
 .toast--error {
   background: #3d1410;
   border-color: rgba(240, 107, 90, 0.3);
+}
+
+:root[data-theme="dark"] .toast--error {
+  background: #391d19;
+  border-color: rgba(255, 128, 111, 0.34);
 }
 
 .toast__icon {

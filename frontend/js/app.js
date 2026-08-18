@@ -10,11 +10,14 @@
   ];
 
   const LANGUAGE_STORAGE_KEY = "dircon.language";
+  const THEME_STORAGE_KEY = "dircon.theme";
 
   const translations = {
     es: {
       brandAria: "DirCon inicio",
       languageLabel: "Idioma",
+      switchToDark: "Cambiar a modo oscuro",
+      switchToLight: "Cambiar a modo claro",
       newContactFull: "Nuevo contacto",
       newContactShort: "Nuevo",
       pageTitle: "Tus contactos",
@@ -89,6 +92,8 @@
     en: {
       brandAria: "DirCon home",
       languageLabel: "Language",
+      switchToDark: "Switch to dark mode",
+      switchToLight: "Switch to light mode",
       newContactFull: "New contact",
       newContactShort: "New",
       pageTitle: "Your contacts",
@@ -187,6 +192,7 @@
     errorMessage: "",
     currentSearch: "",
     language: getStoredLanguage(),
+    theme: getStoredTheme(),
     selectedContact: null,
     drawerAnimationUntil: 0,
     drawerIsClosing: false,
@@ -210,6 +216,7 @@
     newContactButton: document.querySelector("#newContactButton"),
     newContactLabelFull: document.querySelector("#newContactLabelFull"),
     newContactLabelShort: document.querySelector("#newContactLabelShort"),
+    themeToggle: document.querySelector("#themeToggle"),
     languageSelect: document.querySelector("#languageSelect"),
     languageSelectLabel: document.querySelector("#languageSelectLabel"),
     pageTitle: document.querySelector("#pageTitle"),
@@ -221,6 +228,11 @@
   function getStoredLanguage() {
     const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     return storedLanguage === "en" ? "en" : "es";
+  }
+
+  function getStoredTheme() {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === "dark" ? "dark" : "light";
   }
 
   function t(key, values = {}) {
@@ -238,8 +250,12 @@
 
   function updateStaticTexts() {
     document.documentElement.lang = state.language;
+    document.documentElement.dataset.theme = state.theme;
     document.title = "DirCon";
+    const themeLabel = state.theme === "dark" ? t("switchToLight") : t("switchToDark");
     dom.brand.setAttribute("aria-label", t("brandAria"));
+    dom.themeToggle.setAttribute("aria-label", themeLabel);
+    dom.themeToggle.title = themeLabel;
     dom.languageSelect.value = state.language;
     dom.languageSelect.setAttribute("aria-label", t("languageLabel"));
     dom.languageSelectLabel.textContent = t("languageLabel");
@@ -980,6 +996,12 @@
   }
 
   dom.newContactButton.addEventListener("click", () => openForm("create"));
+
+  dom.themeToggle.addEventListener("click", () => {
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    localStorage.setItem(THEME_STORAGE_KEY, state.theme);
+    render();
+  });
 
   dom.languageSelect.addEventListener("change", (event) => {
     state.language = event.target.value === "en" ? "en" : "es";
