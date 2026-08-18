@@ -89,17 +89,29 @@
     </section>
 
     <section class="search-panel" id="searchPanel" aria-label="Buscar contactos">
-      <div class="search-box">
-        <svg class="search-box__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
-          <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-        </svg>
-        <input id="searchInput" type="search" placeholder="Buscar por nombre..." autocomplete="off">
-        <button class="icon-button search-box__clear" id="clearSearchButton" type="button" aria-label="Limpiar busqueda" hidden>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      <div class="search-tools">
+        <div class="search-box">
+          <svg class="search-box__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+            <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
           </svg>
-        </button>
+          <input id="searchInput" type="search" placeholder="Buscar por nombre..." autocomplete="off">
+          <button class="icon-button search-box__clear" id="clearSearchButton" type="button" aria-label="Limpiar busqueda" hidden>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+            </svg>
+          </button>
+        </div>
+
+        <label class="sort-control" for="sortSelect">
+          <span class="sort-control__label" id="sortLabel">Ordenar</span>
+          <select id="sortSelect" aria-label="Ordenar contactos">
+            <option value="newest">Más recientes</option>
+            <option value="oldest">Más antiguos</option>
+            <option value="nameAsc">A → Z</option>
+            <option value="nameDesc">Z → A</option>
+          </select>
+        </label>
       </div>
     </section>
 

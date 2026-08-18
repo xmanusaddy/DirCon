@@ -30,6 +30,13 @@
     { value: "en", labelKey: "englishLanguage" }
   ];
 
+  const sortOptions = [
+    { value: "newest", labelKey: "sortNewest" },
+    { value: "oldest", labelKey: "sortOldest" },
+    { value: "nameAsc", labelKey: "sortAZ" },
+    { value: "nameDesc", labelKey: "sortZA" }
+  ];
+
   const translations = {
     es: {
       brandAria: "DirCon inicio",
@@ -55,6 +62,12 @@
       searchRegion: "Buscar contactos",
       searchPlaceholder: "Buscar por nombre...",
       clearSearch: "Limpiar busqueda",
+      sortLabel: "Ordenar",
+      sortAria: "Ordenar contactos",
+      sortNewest: "Más recientes",
+      sortOldest: "Más antiguos",
+      sortAZ: "A → Z",
+      sortZA: "Z → A",
       contactSingular: "contacto",
       contactPlural: "contactos",
       loadingContacts: "Cargando contactos...",
@@ -143,6 +156,12 @@
       searchRegion: "Search contacts",
       searchPlaceholder: "Search by name...",
       clearSearch: "Clear search",
+      sortLabel: "Sort",
+      sortAria: "Sort contacts",
+      sortNewest: "Newest",
+      sortOldest: "Oldest",
+      sortAZ: "A → Z",
+      sortZA: "Z → A",
       contactSingular: "contact",
       contactPlural: "contacts",
       loadingContacts: "Loading contacts...",
@@ -233,6 +252,7 @@
     status: "loading",
     errorMessage: "",
     currentSearch: "",
+    sortOrder: "newest",
     language: getStoredLanguage(),
     theme: getStoredTheme(),
     accent: getStoredAccent(),
@@ -252,6 +272,8 @@
     count: document.querySelector("#contactCount"),
     searchInput: document.querySelector("#searchInput"),
     clearSearch: document.querySelector("#clearSearchButton"),
+    sortLabel: document.querySelector("#sortLabel"),
+    sortSelect: document.querySelector("#sortSelect"),
     content: document.querySelector("#contentArea"),
     drawerRoot: document.querySelector("#drawerRoot"),
     modalRoot: document.querySelector("#modalRoot"),
@@ -346,6 +368,9 @@
     dom.searchPanel.setAttribute("aria-label", t("searchRegion"));
     dom.searchInput.placeholder = t("searchPlaceholder");
     dom.clearSearch.setAttribute("aria-label", t("clearSearch"));
+    dom.sortLabel.textContent = t("sortLabel");
+    dom.sortSelect.setAttribute("aria-label", t("sortAria"));
+    renderSortOptions();
   }
 
   function renderThemePicker() {
@@ -383,6 +408,13 @@
         </button>
       `;
     }).join("");
+  }
+
+  function renderSortOptions() {
+    dom.sortSelect.innerHTML = sortOptions.map((option) => `
+      <option value="${option.value}">${escapeHtml(t(option.labelKey))}</option>
+    `).join("");
+    dom.sortSelect.value = state.sortOrder;
   }
 
   function emptyForm() {
@@ -444,6 +476,29 @@
     }
   }
 
+  function getContactTime(contact) {
+    const time = Date.parse(contact.createdAt || "");
+    return Number.isNaN(time) ? 0 : time;
+  }
+
+  function getSortedContacts(contacts) {
+    const collator = new Intl.Collator(state.language === "en" ? "en" : "es", {
+      numeric: true,
+      sensitivity: "base"
+    });
+
+    return [...contacts].sort((a, b) => {
+      const nameCompare = collator.compare(a.name || "", b.name || "");
+      const newestCompare = getContactTime(b) - getContactTime(a);
+
+      if (state.sortOrder === "nameAsc") return nameCompare || newestCompare;
+      if (state.sortOrder === "nameDesc") return -nameCompare || newestCompare;
+      if (state.sortOrder === "oldest") return getContactTime(a) - getContactTime(b) || nameCompare;
+
+      return newestCompare || nameCompare;
+    });
+  }
+
   function setOverlayState() {
     const hasOverlay = Boolean(state.selectedContact || state.modal);
     document.body.classList.toggle("has-overlay", hasOverlay);
@@ -502,6 +557,7 @@
 
     dom.searchInput.disabled = state.status === "loading";
     dom.clearSearch.hidden = !state.currentSearch;
+    dom.sortSelect.disabled = state.status === "loading";
   }
 
   function renderContent() {
@@ -525,9 +581,11 @@
       return;
     }
 
+    const sortedContacts = getSortedContacts(state.contacts);
+
     dom.content.innerHTML = `
       <div class="contacts-grid">
-        ${state.contacts.map(contactCard).join("")}
+        ${sortedContacts.map(contactCard).join("")}
       </div>
     `;
   }
@@ -1135,6 +1193,14 @@
     dom.clearSearch.hidden = !state.currentSearch;
     clearTimeout(state.searchTimer);
     state.searchTimer = setTimeout(() => loadContacts(state.currentSearch), 300);
+  });
+
+  dom.sortSelect.addEventListener("change", (event) => {
+    const sortOrder = event.target.value;
+    if (sortOptions.some((option) => option.value === sortOrder)) {
+      state.sortOrder = sortOrder;
+      render();
+    }
   });
 
   dom.content.addEventListener("click", (event) => {

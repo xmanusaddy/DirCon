@@ -433,6 +433,13 @@ button {
   margin-bottom: 32px;
 }
 
+.search-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
 .search-box {
   position: relative;
   width: min(420px, 100%);
@@ -474,6 +481,50 @@ button {
   right: 9px;
   top: 50%;
   transform: translateY(-50%);
+}
+
+.sort-control {
+  min-width: 174px;
+  display: grid;
+  gap: 6px;
+}
+
+.sort-control__label {
+  color: var(--c-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sort-control select {
+  width: 100%;
+  height: 46px;
+  border: 1.5px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-card);
+  color: var(--c-text-secondary);
+  padding: 0 36px 0 13px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.sort-control select:hover,
+.sort-control select:focus {
+  border-color: var(--c-teal);
+  color: var(--c-text);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+}
+
+.sort-control select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.sort-control option {
+  background: var(--c-card);
+  color: var(--c-text);
 }
 
 .content-area {
@@ -1350,6 +1401,15 @@ body.has-overlay {
 
   .page__intro h1 {
     font-size: 26px;
+  }
+
+  .search-tools {
+    align-items: stretch;
+  }
+
+  .search-box,
+  .sort-control {
+    width: 100%;
   }
 
   .contacts-grid {
