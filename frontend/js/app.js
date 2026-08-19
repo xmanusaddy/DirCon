@@ -36,6 +36,13 @@
     { value: "nameAsc", labelKey: "sortAZ" },
     { value: "nameDesc", labelKey: "sortZA" }
   ];
+  const photoAllowedTypes = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp"
+  ]);
+  const photoMaxSize = 5 * 1024 * 1024;
 
   const translations = {
     es: {
@@ -99,6 +106,16 @@
       emailPlaceholder: "ana@email.com",
       companyPlaceholder: "Nombre de la empresa",
       notesPlaceholder: "Agrega una nota sobre este contacto...",
+      photoLabel: "Foto",
+      photoHelp: "JPG, PNG, GIF o WEBP. Maximo 5 MB.",
+      choosePhoto: "Elegir foto",
+      changePhoto: "Cambiar foto",
+      removePhoto: "Quitar foto",
+      photoSelected: "Foto lista para guardar",
+      photoWillBeRemoved: "La foto se quitara al guardar.",
+      photoTypeError: "Solo puedes subir JPG, PNG, GIF o WEBP",
+      photoSizeError: "La imagen no puede superar 5 MB",
+      photoUploadError: "No se pudo subir la imagen",
       cancel: "Cancelar",
       saveContact: "Guardar contacto",
       saveChanges: "Guardar cambios",
@@ -193,6 +210,16 @@
       emailPlaceholder: "ana@email.com",
       companyPlaceholder: "Company name",
       notesPlaceholder: "Add a note about this contact...",
+      photoLabel: "Photo",
+      photoHelp: "JPG, PNG, GIF or WEBP. Max 5 MB.",
+      choosePhoto: "Choose photo",
+      changePhoto: "Change photo",
+      removePhoto: "Remove photo",
+      photoSelected: "Photo ready to save",
+      photoWillBeRemoved: "The photo will be removed when you save.",
+      photoTypeError: "You can only upload JPG, PNG, GIF or WEBP",
+      photoSizeError: "The image cannot be larger than 5 MB",
+      photoUploadError: "Could not upload the image",
       cancel: "Cancel",
       saveContact: "Save contact",
       saveChanges: "Save changes",
@@ -243,6 +270,9 @@
     "El correo debe ser una cadena de texto": "emailType",
     "La empresa debe ser una cadena de texto": "companyType",
     "Las notas deben ser una cadena de texto": "notesType",
+    "Solo se permiten imagenes JPG, PNG, GIF o WEBP": "photoTypeError",
+    "La imagen no puede superar 5 MB": "photoSizeError",
+    "No se pudo subir la imagen": "photoUploadError",
     "Error interno del servidor": "serverError",
     "No se pudo completar la solicitud": "requestError"
   };
@@ -264,6 +294,8 @@
     formMode: "create",
     formDraft: emptyForm(),
     formErrors: {},
+    formPhotoObjectUrl: "",
+    formShouldFocus: false,
     saving: false,
     searchTimer: null
   };
@@ -423,7 +455,12 @@
       phone: "",
       email: "",
       company: "",
-      notes: ""
+      notes: "",
+      photoFile: null,
+      photoPreviewUrl: "",
+      existingPhotoUrl: "",
+      photoError: "",
+      removePhoto: false
     };
   }
 
@@ -450,11 +487,18 @@
     return avatarColors[code % avatarColors.length];
   }
 
-  function avatar(name, size) {
+  function getContactPhotoUrl(contact) {
+    return contact && contact.photoUrl ? api.getAssetUrl(contact.photoUrl) : "";
+  }
+
+  function avatar(name, size, photoUrl = "") {
     const color = getAvatarColor(name);
+    const safePhotoUrl = photoUrl ? escapeHtml(photoUrl) : "";
+
     return `
-      <span class="avatar avatar--${size}" style="background:${color.bg};color:${color.text};" aria-label="${escapeHtml(name)}">
-        ${escapeHtml(getInitials(name))}
+      <span class="avatar avatar--${size} ${safePhotoUrl ? "avatar--image" : ""}" style="background:${color.bg};color:${color.text};" aria-label="${escapeHtml(name)}">
+        <span class="avatar__initials">${escapeHtml(getInitials(name))}</span>
+        ${safePhotoUrl ? `<img class="avatar__image" src="${safePhotoUrl}" alt="">` : ""}
       </span>
     `;
   }
@@ -608,7 +652,7 @@
     const isSelected = state.selectedContact && state.selectedContact._id === contact._id;
     return `
       <button class="contact-card ${isSelected ? "is-selected" : ""}" type="button" data-action="open-contact" data-id="${escapeHtml(contact._id)}">
-        ${avatar(contact.name, "lg")}
+        ${avatar(contact.name, "lg", getContactPhotoUrl(contact))}
         <span class="contact-card__body">
           <span class="contact-card__name">${escapeHtml(contact.name)}</span>
           ${contact.company ? `<span class="contact-card__company">${escapeHtml(contact.company)}</span>` : ""}
@@ -763,7 +807,7 @@
         </div>
 
         <div class="drawer__hero">
-          ${avatar(contact.name, "xl")}
+          ${avatar(contact.name, "xl", getContactPhotoUrl(contact))}
           <h2>${escapeHtml(contact.name)}</h2>
           ${contact.company ? `<p>${escapeHtml(contact.company)}</p>` : ""}
         </div>
@@ -809,17 +853,22 @@
   function renderModal() {
     if (state.modal === "form") {
       dom.modalRoot.innerHTML = formModal();
-      setTimeout(() => {
-        const target = state.formErrors.name
-          ? "#name"
-          : state.formErrors.phone
-            ? "#phone"
-            : state.formErrors.email
-              ? "#email"
-              : "#name";
-        const input = document.querySelector(target);
-        if (input && !state.saving) input.focus();
-      }, 0);
+      if (state.formShouldFocus) {
+        state.formShouldFocus = false;
+        setTimeout(() => {
+          const target = state.formErrors.name
+            ? "#name"
+            : state.formErrors.phone
+              ? "#phone"
+              : state.formErrors.email
+                ? "#email"
+                : state.formErrors.photo
+                  ? "#photo"
+                  : "#name";
+          const input = document.querySelector(target);
+          if (input && !state.saving) input.focus();
+        }, 0);
+      }
       return;
     }
 
@@ -842,7 +891,7 @@
       <div class="modal-layer" role="dialog" aria-modal="true" aria-label="${title}">
         <section class="modal animate-scale-in">
           <header class="modal__header">
-            ${isEdit && contact ? avatar(contact.name, "md") : ""}
+            ${isEdit && contact ? avatar(contact.name, "md", getContactPhotoUrl(contact)) : ""}
             <div class="modal__title">
               <h2>${title}</h2>
               ${!isEdit ? `<p>${t("createHelp")}</p>` : ""}
@@ -854,6 +903,7 @@
 
           <form class="contact-form" id="contactForm" novalidate>
             <div class="form-stack">
+              ${photoField(isEdit, contact)}
               ${fieldInput("name", t("nameLabel"), "text", t("namePlaceholder"), true, "name")}
               <div class="form-grid">
                 ${fieldInput("phone", t("phoneLabel"), "tel", t("phonePlaceholder"), true, "tel")}
@@ -882,6 +932,48 @@
         <label for="${id}">${label}${required ? "<span>*</span>" : ""}</label>
         <input id="${id}" name="${id}" type="${type}" value="${escapeHtml(state.formDraft[id])}" placeholder="${placeholder}" autocomplete="${autocomplete}" ${error ? 'aria-invalid="true"' : ""} ${error ? `aria-describedby="${id}Error"` : ""}>
         ${fieldError(id, error)}
+      </div>
+    `;
+  }
+
+  function photoField(isEdit, contact) {
+    const error = state.formErrors.photo || "";
+    const existingPhotoUrl = state.formDraft.removePhoto
+      ? ""
+      : api.getAssetUrl(state.formDraft.existingPhotoUrl);
+    const previewUrl = state.formDraft.photoPreviewUrl || existingPhotoUrl;
+    const fallbackName = state.formDraft.name || (contact && contact.name) || "";
+    const hasCurrentPhoto = Boolean(state.formDraft.photoFile || (isEdit && state.formDraft.existingPhotoUrl && !state.formDraft.removePhoto));
+    const status = state.formDraft.photoFile
+      ? t("photoSelected")
+      : state.formDraft.removePhoto
+        ? t("photoWillBeRemoved")
+        : t("photoHelp");
+
+    return `
+      <div class="photo-picker ${error ? "has-error" : ""}">
+        <label class="photo-picker__label" for="photo">${t("photoLabel")}</label>
+        <div class="photo-picker__content">
+          <div class="photo-picker__preview">
+            ${previewUrl ? `<img src="${escapeHtml(previewUrl)}" alt="">` : avatar(fallbackName, "lg")}
+          </div>
+
+          <div class="photo-picker__controls">
+            <label class="btn btn--ghost photo-picker__button" for="photo">
+              ${iconCamera()}
+              ${previewUrl ? t("changePhoto") : t("choosePhoto")}
+            </label>
+            <input class="sr-only" id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" ${state.saving ? "disabled" : ""}>
+            ${hasCurrentPhoto ? `
+              <button class="btn btn--ghost photo-picker__remove" type="button" data-action="remove-photo" ${state.saving ? "disabled" : ""}>
+                ${iconTrash()}
+                ${t("removePhoto")}
+              </button>
+            ` : ""}
+            <p class="photo-picker__hint">${escapeHtml(status)}</p>
+            ${fieldError("photo", error)}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -922,7 +1014,7 @@
             </svg>
           </span>
           <div class="delete-contact-heading">
-            ${avatar(contact.name, "sm")}
+            ${avatar(contact.name, "sm", getContactPhotoUrl(contact))}
             <h2>${escapeHtml(contact.name)}</h2>
           </div>
           <p>${t("deleteWarning")}</p>
@@ -937,18 +1029,75 @@
     `;
   }
 
+  function revokePhotoPreview() {
+    if (!state.formPhotoObjectUrl) return;
+
+    URL.revokeObjectURL(state.formPhotoObjectUrl);
+    state.formPhotoObjectUrl = "";
+  }
+
+  function setFormPhoto(file) {
+    if (!file) return;
+
+    if (!photoAllowedTypes.has(file.type)) {
+      revokePhotoPreview();
+      state.formDraft.photoFile = null;
+      state.formDraft.photoPreviewUrl = "";
+      state.formDraft.photoError = t("photoTypeError");
+      state.formErrors.photo = t("photoTypeError");
+      render();
+      return;
+    }
+
+    if (file.size > photoMaxSize) {
+      revokePhotoPreview();
+      state.formDraft.photoFile = null;
+      state.formDraft.photoPreviewUrl = "";
+      state.formDraft.photoError = t("photoSizeError");
+      state.formErrors.photo = t("photoSizeError");
+      render();
+      return;
+    }
+
+    revokePhotoPreview();
+    state.formPhotoObjectUrl = URL.createObjectURL(file);
+    state.formDraft.photoFile = file;
+    state.formDraft.photoPreviewUrl = state.formPhotoObjectUrl;
+    state.formDraft.photoError = "";
+    state.formDraft.removePhoto = false;
+    delete state.formErrors.photo;
+    render();
+  }
+
+  function removeFormPhoto() {
+    revokePhotoPreview();
+    state.formDraft.photoFile = null;
+    state.formDraft.photoPreviewUrl = "";
+    state.formDraft.photoError = "";
+    state.formDraft.removePhoto = Boolean(state.formDraft.existingPhotoUrl);
+    delete state.formErrors.photo;
+    render();
+  }
+
   function openForm(mode) {
     const contact = state.selectedContact;
+    revokePhotoPreview();
     state.modal = "form";
     state.formMode = mode;
     state.formErrors = {};
+    state.formShouldFocus = true;
     state.formDraft = mode === "edit" && contact
       ? {
           name: contact.name || "",
           phone: contact.phone || "",
           email: contact.email || "",
           company: contact.company || "",
-          notes: contact.notes || ""
+          notes: contact.notes || "",
+          photoFile: null,
+          photoPreviewUrl: "",
+          existingPhotoUrl: contact.photoUrl || "",
+          photoError: "",
+          removePhoto: false
         }
       : emptyForm();
     render();
@@ -956,8 +1105,11 @@
 
   function closeModal() {
     if (state.saving) return;
+    revokePhotoPreview();
     state.modal = null;
     state.formErrors = {};
+    state.formShouldFocus = false;
+    state.formDraft = emptyForm();
     render();
   }
 
@@ -969,7 +1121,12 @@
       phone: String(data.get("phone") || ""),
       email: String(data.get("email") || ""),
       company: String(data.get("company") || ""),
-      notes: String(data.get("notes") || "")
+      notes: String(data.get("notes") || ""),
+      photoFile: state.formDraft.photoFile,
+      photoPreviewUrl: state.formDraft.photoPreviewUrl,
+      existingPhotoUrl: state.formDraft.existingPhotoUrl,
+      photoError: state.formDraft.photoError,
+      removePhoto: state.formDraft.removePhoto
     };
   }
 
@@ -982,6 +1139,15 @@
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
       errors.email = t("invalidEmail");
     }
+
+    if (data.photoError) {
+      errors.photo = data.photoError;
+    } else if (data.photoFile && !photoAllowedTypes.has(data.photoFile.type)) {
+      errors.photo = t("photoTypeError");
+    } else if (data.photoFile && data.photoFile.size > photoMaxSize) {
+      errors.photo = t("photoSizeError");
+    }
+
     return errors;
   }
 
@@ -991,7 +1157,9 @@
       phone: data.phone.trim(),
       email: data.email.trim(),
       company: data.company.trim(),
-      notes: data.notes.trim()
+      notes: data.notes.trim(),
+      photoFile: data.photoFile,
+      removePhoto: data.removePhoto
     };
   }
 
@@ -1003,10 +1171,12 @@
         : normalizedMessage.includes("correo") || normalizedMessage.includes("email") ? "email"
           : normalizedMessage.includes("empresa") || normalizedMessage.includes("company") ? "company"
             : normalizedMessage.includes("notas") || normalizedMessage.includes("notes") ? "notes"
-              : null;
+              : normalizedMessage.includes("imagen") || normalizedMessage.includes("image") || normalizedMessage.includes("jpg") || normalizedMessage.includes("png") || normalizedMessage.includes("webp") ? "photo"
+                : null;
 
     if (field) {
       state.formErrors = { [field]: translatedMessage };
+      state.formShouldFocus = true;
       render();
     }
 
@@ -1022,6 +1192,7 @@
     state.formErrors = validateForm(raw);
 
     if (Object.keys(state.formErrors).length > 0) {
+      state.formShouldFocus = true;
       render();
       return;
     }
@@ -1039,8 +1210,11 @@
         showToast(t("updatedToast"));
       }
 
+      revokePhotoPreview();
       state.modal = null;
       state.formErrors = {};
+      state.formShouldFocus = false;
+      state.formDraft = emptyForm();
       await loadContacts(state.currentSearch);
     } catch (error) {
       state.saving = false;
@@ -1133,6 +1307,24 @@
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
         <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"></rect>
         <path d="M1.5 5l6.5 4.5L14.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    `;
+  }
+
+  function iconCamera() {
+    return `
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d="M5.2 3.2l.7-1.1h3.2l.7 1.1h2.1A1.6 1.6 0 0113.5 4.8v6.1a1.6 1.6 0 01-1.6 1.6H3.1a1.6 1.6 0 01-1.6-1.6V4.8a1.6 1.6 0 011.6-1.6h2.1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path>
+        <circle cx="7.5" cy="8" r="2.4" stroke="currentColor" stroke-width="1.3"></circle>
+      </svg>
+    `;
+  }
+
+  function iconTrash() {
+    return `
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d="M2.3 4h10.4M6 1.9h3M5.2 4v7.4M7.5 4v7.4M9.8 4v7.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path>
+        <path d="M3.6 4l.5 8.2a1.3 1.3 0 001.3 1.2h4.2a1.3 1.3 0 001.3-1.2l.5-8.2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path>
       </svg>
     `;
   }
@@ -1253,6 +1445,7 @@
       render();
     }
     if (action === "close-modal") closeModal();
+    if (action === "remove-photo") removeFormPhoto();
     if (action === "delete-contact") deleteSelectedContact();
     if (action === "copy") copyValue(actionTarget);
   });
@@ -1266,6 +1459,7 @@
   document.addEventListener("input", (event) => {
     const field = event.target.closest("#contactForm [name]");
     if (!field) return;
+    if (field.type === "file") return;
 
     state.formDraft[field.name] = field.value;
     if (state.formErrors[field.name]) {
@@ -1275,6 +1469,21 @@
       if (errorNode) errorNode.remove();
     }
   });
+
+  document.addEventListener("change", (event) => {
+    const photoInput = event.target.closest("#contactForm input[type='file'][name='photo']");
+    if (!photoInput) return;
+
+    setFormPhoto(photoInput.files[0]);
+  });
+
+  document.addEventListener("error", (event) => {
+    if (event.target instanceof Element && event.target.matches(".avatar__image")) {
+      const avatarNode = event.target.closest(".avatar");
+      if (avatarNode) avatarNode.classList.remove("avatar--image");
+      event.target.remove();
+    }
+  }, true);
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
