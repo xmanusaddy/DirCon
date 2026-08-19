@@ -5,6 +5,22 @@ const Contact = require("../models/Contact");
 const { uploadDir } = require("../middleware/uploadContactPhoto");
 
 const hasField = (body, field) => Object.prototype.hasOwnProperty.call(body, field);
+const allowedExtraLinkTypes = new Set([
+    "github",
+    "discord",
+    "linkedin",
+    "instagram",
+    "website",
+    "other"
+]);
+const defaultExtraLinkLabels = {
+    github: "GitHub",
+    discord: "Discord",
+    linkedin: "LinkedIn",
+    instagram: "Instagram",
+    website: "Sitio web",
+    other: "Otro"
+};
 
 const fieldMessages = {
     name: {
@@ -24,6 +40,14 @@ const fieldMessages = {
     },
     notes: {
         type: "Las notas deben ser una cadena de texto"
+    },
+    extraLinks: {
+        type: "Los links extra deben enviarse como una lista",
+        item: "Cada link extra debe ser un objeto",
+        max: "No puedes agregar mas de 10 links extra",
+        linkType: "El tipo de link extra no es valido",
+        value: "El valor del link extra es obligatorio",
+        url: "La URL del link extra debe empezar con http:// o https://"
     }
 };
 
@@ -51,6 +75,81 @@ const validateStringField = (body, field, options = {}) => {
     }
 
     return { value: trimmedValue };
+};
+
+const parseExtraLinksValue = (value) => {
+    if (typeof value === "string") {
+        if (!value.trim()) return [];
+
+        try {
+            return JSON.parse(value);
+        } catch {
+            return null;
+        }
+    }
+
+    return value;
+};
+
+const validateExtraLinks = (body) => {
+    if (!hasField(body, "extraLinks")) {
+        return {};
+    }
+
+    const parsedLinks = parseExtraLinksValue(body.extraLinks);
+
+    if (!Array.isArray(parsedLinks)) {
+        return { error: fieldMessages.extraLinks.type };
+    }
+
+    if (parsedLinks.length > 10) {
+        return { error: fieldMessages.extraLinks.max };
+    }
+
+    const links = [];
+
+    for (const link of parsedLinks) {
+        if (!link || typeof link !== "object" || Array.isArray(link)) {
+            return { error: fieldMessages.extraLinks.item };
+        }
+
+        if (typeof link.type !== "string") {
+            return { error: fieldMessages.extraLinks.linkType };
+        }
+
+        const type = link.type.trim().toLowerCase();
+
+        if (!allowedExtraLinkTypes.has(type)) {
+            return { error: fieldMessages.extraLinks.linkType };
+        }
+
+        if (typeof link.value !== "string" || !link.value.trim()) {
+            return { error: fieldMessages.extraLinks.value };
+        }
+
+        if (link.label !== undefined && typeof link.label !== "string") {
+            return { error: fieldMessages.extraLinks.item };
+        }
+
+        if (link.url !== undefined && typeof link.url !== "string") {
+            return { error: fieldMessages.extraLinks.url };
+        }
+
+        const url = String(link.url || "").trim();
+
+        if (url && !/^https?:\/\/\S+$/i.test(url)) {
+            return { error: fieldMessages.extraLinks.url };
+        }
+
+        links.push({
+            type,
+            label: String(link.label || defaultExtraLinkLabels[type]).trim(),
+            value: link.value.trim(),
+            url
+        });
+    }
+
+    return { value: links };
 };
 
 const getPhotoUrl = (file) => file ? `/uploads/contacts/${file.filename}` : "";
@@ -178,13 +277,20 @@ const createContact = async (req, res, next) => {
             return sendValidationError(res, notes.error, req.file);
         }
 
+        const extraLinks = validateExtraLinks(body);
+
+        if (extraLinks.error) {
+            return sendValidationError(res, extraLinks.error, req.file);
+        }
+
         const contact = await Contact.create({
             name: name.value,
             phone: phone.value,
             email: email.value,
             company: company.value || "",
             notes: notes.value || "",
-            photoUrl
+            photoUrl,
+            extraLinks: extraLinks.value || []
         });
 
         res.status(201).json({
@@ -245,6 +351,16 @@ const updateContact = async (req, res, next) => {
             if (hasField(body, field.name)) {
                 updateData[field.name] = result.value;
             }
+        }
+
+        const extraLinks = validateExtraLinks(body);
+
+        if (extraLinks.error) {
+            return sendValidationError(res, extraLinks.error, req.file);
+        }
+
+        if (hasField(body, "extraLinks")) {
+            updateData.extraLinks = extraLinks.value;
         }
 
         const existingContact = await Contact.findById(id);
