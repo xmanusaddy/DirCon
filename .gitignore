@@ -126,6 +126,9 @@ dist
 .vscode-test
 .vs/
 
+# DirCon uploaded contact photos
+backend/uploads/
+
 # pnpm
 .pnpm-store
 

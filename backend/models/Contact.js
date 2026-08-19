@@ -35,6 +35,12 @@ const contactSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: ""
+        },
+
+        photoUrl: {
+            type: String,
+            trim: true,
+            default: ""
         }
     },
     {

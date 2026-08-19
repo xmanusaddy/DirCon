@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
+const fs = require("fs/promises");
+const path = require("path");
 const Contact = require("../models/Contact");
+const { uploadDir } = require("../middleware/uploadContactPhoto");
 
 const hasField = (body, field) => Object.prototype.hasOwnProperty.call(body, field);
 
@@ -50,7 +53,38 @@ const validateStringField = (body, field, options = {}) => {
     return { value: trimmedValue };
 };
 
-const sendValidationError = (res, message) => res.status(400).json({ message });
+const getPhotoUrl = (file) => file ? `/uploads/contacts/${file.filename}` : "";
+
+const deleteUploadedFile = async (file) => {
+    if (!file) return;
+
+    try {
+        await fs.unlink(file.path);
+    } catch (error) {
+        if (error.code !== "ENOENT") {
+            console.error(error);
+        }
+    }
+};
+
+const deletePhotoByUrl = async (photoUrl) => {
+    if (!photoUrl || !photoUrl.startsWith("/uploads/contacts/")) return;
+
+    const filePath = path.join(uploadDir, path.basename(photoUrl));
+
+    try {
+        await fs.unlink(filePath);
+    } catch (error) {
+        if (error.code !== "ENOENT") {
+            console.error(error);
+        }
+    }
+};
+
+const sendValidationError = async (res, message, file) => {
+    await deleteUploadedFile(file);
+    return res.status(400).json({ message });
+};
 
 // Obtener todos los contactos y buscar por nombre
 const getContacts = async (req, res, next) => {
@@ -103,6 +137,7 @@ const getContactById = async (req, res, next) => {
 const createContact = async (req, res, next) => {
     try {
         const body = req.body || {};
+        const photoUrl = getPhotoUrl(req.file);
 
         const name = validateStringField(body, "name", {
             required: true,
@@ -110,7 +145,7 @@ const createContact = async (req, res, next) => {
         });
 
         if (name.error) {
-            return sendValidationError(res, name.error);
+            return sendValidationError(res, name.error, req.file);
         }
 
         const phone = validateStringField(body, "phone", {
@@ -119,7 +154,7 @@ const createContact = async (req, res, next) => {
         });
 
         if (phone.error) {
-            return sendValidationError(res, phone.error);
+            return sendValidationError(res, phone.error, req.file);
         }
 
         const email = validateStringField(body, "email", {
@@ -128,19 +163,19 @@ const createContact = async (req, res, next) => {
         });
 
         if (email.error) {
-            return sendValidationError(res, email.error);
+            return sendValidationError(res, email.error, req.file);
         }
 
         const company = validateStringField(body, "company");
 
         if (company.error) {
-            return sendValidationError(res, company.error);
+            return sendValidationError(res, company.error, req.file);
         }
 
         const notes = validateStringField(body, "notes");
 
         if (notes.error) {
-            return sendValidationError(res, notes.error);
+            return sendValidationError(res, notes.error, req.file);
         }
 
         const contact = await Contact.create({
@@ -148,7 +183,8 @@ const createContact = async (req, res, next) => {
             phone: phone.value,
             email: email.value,
             company: company.value || "",
-            notes: notes.value || ""
+            notes: notes.value || "",
+            photoUrl
         });
 
         res.status(201).json({
@@ -156,6 +192,7 @@ const createContact = async (req, res, next) => {
             contact
         });
     } catch (error) {
+        await deleteUploadedFile(req.file);
         next(error);
     }
 };
@@ -166,12 +203,14 @@ const updateContact = async (req, res, next) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
+            await deleteUploadedFile(req.file);
             return res.status(400).json({
                 message: "ID de contacto no valido"
             });
         }
 
         const body = req.body || {};
+        const shouldRemovePhoto = body.removePhoto === "true" || body.removePhoto === true;
         const fieldsToValidate = [
             {
                 name: "name",
@@ -200,12 +239,27 @@ const updateContact = async (req, res, next) => {
             });
 
             if (result.error) {
-                return sendValidationError(res, result.error);
+                return sendValidationError(res, result.error, req.file);
             }
 
             if (hasField(body, field.name)) {
                 updateData[field.name] = result.value;
             }
+        }
+
+        const existingContact = await Contact.findById(id);
+
+        if (!existingContact) {
+            await deleteUploadedFile(req.file);
+            return res.status(404).json({
+                message: "Contacto no encontrado"
+            });
+        }
+
+        if (req.file) {
+            updateData.photoUrl = getPhotoUrl(req.file);
+        } else if (shouldRemovePhoto) {
+            updateData.photoUrl = "";
         }
 
         const contact = await Contact.findByIdAndUpdate(
@@ -218,9 +272,14 @@ const updateContact = async (req, res, next) => {
         );
 
         if (!contact) {
+            await deleteUploadedFile(req.file);
             return res.status(404).json({
                 message: "Contacto no encontrado"
             });
+        }
+
+        if ((req.file || shouldRemovePhoto) && existingContact.photoUrl) {
+            await deletePhotoByUrl(existingContact.photoUrl);
         }
 
         res.status(200).json({
@@ -228,6 +287,7 @@ const updateContact = async (req, res, next) => {
             contact
         });
     } catch (error) {
+        await deleteUploadedFile(req.file);
         next(error);
     }
 };
@@ -250,6 +310,8 @@ const deleteContact = async (req, res, next) => {
                 message: "Contacto no encontrado"
             });
         }
+
+        await deletePhotoByUrl(contact.photoUrl);
 
         res.status(200).json({
             message: "Contacto eliminado correctamente",

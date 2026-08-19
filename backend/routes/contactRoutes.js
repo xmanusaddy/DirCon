@@ -7,6 +7,7 @@ const {
     updateContact,
     deleteContact
 } = require("../controllers/contactController");
+const { uploadContactPhoto } = require("../middleware/uploadContactPhoto");
 
 const router = express.Router();
 
@@ -17,10 +18,10 @@ router.get("/", getContacts);
 router.get("/:id", getContactById);
 
 // Crear un contacto
-router.post("/", createContact);
+router.post("/", uploadContactPhoto, createContact);
 
 // Actualizar un contacto
-router.put("/:id", updateContact);
+router.put("/:id", uploadContactPhoto, updateContact);
 
 // Eliminar un contacto
 router.delete("/:id", deleteContact);
