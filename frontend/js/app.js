@@ -1,349 +1,35 @@
 (function () {
   const api = window.DirConAPI;
-  const avatarColors = [
-    { bg: "#c8edea", text: "#1b8c83" },
-    { bg: "#fde8e6", text: "#c94b3a" },
-    { bg: "#fef3c4", text: "#966e0a" },
-    { bg: "#d1f0e8", text: "#1e7a60" },
-    { bg: "#ebe6f8", text: "#6040bb" },
-    { bg: "#fde6d8", text: "#b84d22" }
-  ];
-
-  const LANGUAGE_STORAGE_KEY = "dircon.language";
-  const THEME_STORAGE_KEY = "dircon.theme";
-  const ACCENT_STORAGE_KEY = "dircon.accent";
-
-  const accentOptions = [
-    { value: "green", labelKey: "accentGreen" },
-    { value: "blue", labelKey: "accentBlue" },
-    { value: "purple", labelKey: "accentPurple" },
-    { value: "orange", labelKey: "accentOrange" }
-  ];
-
-  const themeOptions = [
-    { value: "light", labelKey: "lightTheme" },
-    { value: "dark", labelKey: "darkTheme" }
-  ];
-
-  const languageOptions = [
-    { value: "es", labelKey: "spanishLanguage" },
-    { value: "en", labelKey: "englishLanguage" }
-  ];
-
-  const sortOptions = [
-    { value: "newest", labelKey: "sortNewest" },
-    { value: "oldest", labelKey: "sortOldest" },
-    { value: "nameAsc", labelKey: "sortAZ" },
-    { value: "nameDesc", labelKey: "sortZA" }
-  ];
-  const photoAllowedTypes = new Set([
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp"
-  ]);
-  const photoMaxSize = 5 * 1024 * 1024;
-  const extraLinkTypes = [
-    { value: "github", labelKey: "githubLink", placeholderKey: "githubPlaceholder" },
-    { value: "discord", labelKey: "discordLink", placeholderKey: "discordPlaceholder" },
-    { value: "linkedin", labelKey: "linkedinLink", placeholderKey: "linkedinPlaceholder" },
-    { value: "instagram", labelKey: "instagramLink", placeholderKey: "instagramPlaceholder" },
-    { value: "website", labelKey: "websiteLink", placeholderKey: "websitePlaceholder" },
-    { value: "other", labelKey: "otherLink", placeholderKey: "otherLinkPlaceholder" }
-  ];
+  const {
+    avatarColors,
+    LANGUAGE_STORAGE_KEY,
+    THEME_STORAGE_KEY,
+    ACCENT_STORAGE_KEY,
+    accentOptions,
+    themeOptions,
+    languageOptions,
+    sortOptions,
+    photoAllowedTypes,
+    photoMaxSize,
+    extraLinkTypes,
+    maxExtraLinks
+  } = window.DirConConfig;
+  const {
+    iconClose,
+    iconPhone,
+    iconMail,
+    iconLink,
+    iconPlusSmall,
+    iconCamera,
+    iconTrash,
+    iconCopy,
+    iconCheck,
+    iconCheckTiny,
+    iconWarningTiny
+  } = window.DirConIcons;
   const extraLinkTypeValues = extraLinkTypes.map((type) => type.value);
-  const maxExtraLinks = 10;
 
-  const translations = {
-    es: {
-      brandAria: "DirCon inicio",
-      languageLabel: "Idioma",
-      preferencesLabel: "Preferencias",
-      appearanceLabel: "Apariencia",
-      themeLabel: "Tema",
-      lightTheme: "Claro",
-      darkTheme: "Oscuro",
-      spanishLanguage: "Español",
-      englishLanguage: "English",
-      accentColor: "Color de acento",
-      accentGreen: "Verde",
-      accentBlue: "Azul",
-      accentPurple: "Morado",
-      accentOrange: "Naranja",
-      switchToDark: "Cambiar a modo oscuro",
-      switchToLight: "Cambiar a modo claro",
-      newContactFull: "Nuevo contacto",
-      newContactShort: "Nuevo",
-      pageTitle: "Tus contactos",
-      pageSubtitle: "Todo el mundo importante, en un solo lugar.",
-      searchRegion: "Buscar contactos",
-      searchPlaceholder: "Buscar por nombre...",
-      clearSearch: "Limpiar busqueda",
-      sortLabel: "Ordenar",
-      sortAria: "Ordenar contactos",
-      sortNewest: "Más recientes",
-      sortOldest: "Más antiguos",
-      sortAZ: "A → Z",
-      sortZA: "Z → A",
-      contactSingular: "contacto",
-      contactPlural: "contactos",
-      loadingContacts: "Cargando contactos...",
-      viewContact: "Ver contacto",
-      emptyTitle: "Todavía no tienes contactos",
-      emptyBody: "Agrega tu primer contacto para comenzar a organizar tu directorio.",
-      noResultsTitle: "No encontramos",
-      noResultsBody: "Prueba buscando con un nombre diferente o revisa la ortografía.",
-      errorTitle: "No pudimos conectar con DirCon",
-      errorFallback: "Comprueba que el backend esté encendido e inténtalo nuevamente.",
-      retry: "Reintentar",
-      drawerLabel: "Contacto",
-      drawerAria: "Detalles de {name}",
-      closePanel: "Cerrar panel",
-      phoneLabel: "Teléfono",
-      emailLabel: "Correo electrónico",
-      notesLabel: "Notas",
-      addedOn: "Agregado el {date}",
-      editContact: "Editar contacto",
-      deleteContact: "Eliminar contacto",
-      createTitle: "Nuevo contacto",
-      editTitle: "Editar contacto",
-      createHelp: "Los campos marcados con * son obligatorios.",
-      close: "Cerrar",
-      nameLabel: "Nombre",
-      companyLabel: "Empresa",
-      namePlaceholder: "Ana Martinez",
-      phonePlaceholder: "809-555-0100",
-      emailPlaceholder: "ana@email.com",
-      companyPlaceholder: "Nombre de la empresa",
-      notesPlaceholder: "Agrega una nota sobre este contacto...",
-      photoLabel: "Foto",
-      photoHelp: "JPG, PNG, GIF o WEBP. Maximo 5 MB.",
-      choosePhoto: "Elegir foto",
-      changePhoto: "Cambiar foto",
-      removePhoto: "Quitar foto",
-      photoSelected: "Foto lista para guardar",
-      photoWillBeRemoved: "La foto se quitara al guardar.",
-      photoTypeError: "Solo puedes subir JPG, PNG, GIF o WEBP",
-      photoSizeError: "La imagen no puede superar 5 MB",
-      photoUploadError: "No se pudo subir la imagen",
-      extraLinksLabel: "Links extra",
-      extraLinksHelp: "Agrega redes o usuarios donde tambien puedan contactar a esta persona.",
-      addExtraLink: "Agregar link",
-      removeExtraLink: "Quitar link",
-      extraLinkTypeLabel: "Tipo",
-      extraLinkValueLabel: "Usuario o link",
-      extraLinkCustomLabel: "Nombre",
-      extraLinkValueRequired: "Completa el usuario o link, o elimina esta fila",
-      extraLinkMaxError: "Solo puedes agregar hasta 10 links extra",
-      extraLinksTypeError: "Los links extra deben enviarse como una lista",
-      extraLinkInvalidType: "El tipo de link extra no es valido",
-      extraLinkInvalidUrl: "La URL del link extra debe empezar con http:// o https://",
-      contactLinksLabel: "Links extra",
-      githubLink: "GitHub",
-      discordLink: "Discord",
-      linkedinLink: "LinkedIn",
-      instagramLink: "Instagram",
-      websiteLink: "Sitio web",
-      otherLink: "Otro",
-      githubPlaceholder: "usuario o https://github.com/usuario",
-      discordPlaceholder: "usuario de Discord",
-      linkedinPlaceholder: "usuario o link de LinkedIn",
-      instagramPlaceholder: "@usuario o link",
-      websitePlaceholder: "https://sitio.com",
-      otherLinkPlaceholder: "usuario, enlace o referencia",
-      otherLabelPlaceholder: "Ej. Portfolio, Twitch...",
-      cancel: "Cancelar",
-      saveContact: "Guardar contacto",
-      saveChanges: "Guardar cambios",
-      saving: "Guardando...",
-      deleteDialogAria: "Confirmar eliminación",
-      deleteWarning: "Esta acción eliminará el contacto de forma permanente y no se puede deshacer.",
-      deleteAction: "Eliminar",
-      deleting: "Eliminando...",
-      nameRequired: "El nombre es obligatorio",
-      phoneRequired: "El teléfono es obligatorio",
-      emailRequired: "El correo es obligatorio",
-      invalidEmail: "El correo no tiene un formato válido",
-      createdToast: "Contacto creado correctamente",
-      updatedToast: "Contacto actualizado correctamente",
-      deletedToast: "Contacto eliminado correctamente",
-      loadContactError: "No se pudo cargar el contacto",
-      saveContactError: "No se pudo guardar el contacto",
-      deleteContactError: "No se pudo eliminar el contacto",
-      copy: "Copiar",
-      copied: "Copiado",
-      copyPhone: "Copiar teléfono",
-      copyEmail: "Copiar correo electrónico",
-      copyError: "No se pudo copiar",
-      requestError: "No se pudo completar la solicitud",
-      idInvalid: "ID de contacto no valido",
-      notFound: "Contacto no encontrado",
-      nameType: "El nombre debe ser una cadena de texto",
-      phoneType: "El telefono debe ser una cadena de texto",
-      emailType: "El correo debe ser una cadena de texto",
-      companyType: "La empresa debe ser una cadena de texto",
-      notesType: "Las notas deben ser una cadena de texto",
-      serverError: "Error interno del servidor"
-    },
-    en: {
-      brandAria: "DirCon home",
-      languageLabel: "Language",
-      preferencesLabel: "Preferences",
-      appearanceLabel: "Appearance",
-      themeLabel: "Theme",
-      lightTheme: "Light",
-      darkTheme: "Dark",
-      spanishLanguage: "Español",
-      englishLanguage: "English",
-      accentColor: "Accent color",
-      accentGreen: "Green",
-      accentBlue: "Blue",
-      accentPurple: "Purple",
-      accentOrange: "Orange",
-      switchToDark: "Switch to dark mode",
-      switchToLight: "Switch to light mode",
-      newContactFull: "New contact",
-      newContactShort: "New",
-      pageTitle: "Your contacts",
-      pageSubtitle: "Everyone important, in one place.",
-      searchRegion: "Search contacts",
-      searchPlaceholder: "Search by name...",
-      clearSearch: "Clear search",
-      sortLabel: "Sort",
-      sortAria: "Sort contacts",
-      sortNewest: "Newest",
-      sortOldest: "Oldest",
-      sortAZ: "A → Z",
-      sortZA: "Z → A",
-      contactSingular: "contact",
-      contactPlural: "contacts",
-      loadingContacts: "Loading contacts...",
-      viewContact: "View contact",
-      emptyTitle: "You do not have contacts yet",
-      emptyBody: "Add your first contact to start organizing your directory.",
-      noResultsTitle: "We did not find",
-      noResultsBody: "Try searching with a different name or check the spelling.",
-      errorTitle: "We could not connect to DirCon",
-      errorFallback: "Make sure the backend is running and try again.",
-      retry: "Retry",
-      drawerLabel: "Contact",
-      drawerAria: "Details for {name}",
-      closePanel: "Close panel",
-      phoneLabel: "Phone",
-      emailLabel: "Email",
-      notesLabel: "Notes",
-      addedOn: "Added on {date}",
-      editContact: "Edit contact",
-      deleteContact: "Delete contact",
-      createTitle: "New contact",
-      editTitle: "Edit contact",
-      createHelp: "Fields marked with * are required.",
-      close: "Close",
-      nameLabel: "Name",
-      companyLabel: "Company",
-      namePlaceholder: "Ana Martinez",
-      phonePlaceholder: "809-555-0100",
-      emailPlaceholder: "ana@email.com",
-      companyPlaceholder: "Company name",
-      notesPlaceholder: "Add a note about this contact...",
-      photoLabel: "Photo",
-      photoHelp: "JPG, PNG, GIF or WEBP. Max 5 MB.",
-      choosePhoto: "Choose photo",
-      changePhoto: "Change photo",
-      removePhoto: "Remove photo",
-      photoSelected: "Photo ready to save",
-      photoWillBeRemoved: "The photo will be removed when you save.",
-      photoTypeError: "You can only upload JPG, PNG, GIF or WEBP",
-      photoSizeError: "The image cannot be larger than 5 MB",
-      photoUploadError: "Could not upload the image",
-      extraLinksLabel: "Extra links",
-      extraLinksHelp: "Add social profiles or usernames where this person can also be reached.",
-      addExtraLink: "Add link",
-      removeExtraLink: "Remove link",
-      extraLinkTypeLabel: "Type",
-      extraLinkValueLabel: "Username or link",
-      extraLinkCustomLabel: "Name",
-      extraLinkValueRequired: "Complete the username or link, or remove this row",
-      extraLinkMaxError: "You can add up to 10 extra links",
-      extraLinksTypeError: "Extra links must be sent as a list",
-      extraLinkInvalidType: "The extra link type is invalid",
-      extraLinkInvalidUrl: "The extra link URL must start with http:// or https://",
-      contactLinksLabel: "Extra links",
-      githubLink: "GitHub",
-      discordLink: "Discord",
-      linkedinLink: "LinkedIn",
-      instagramLink: "Instagram",
-      websiteLink: "Website",
-      otherLink: "Other",
-      githubPlaceholder: "username or https://github.com/username",
-      discordPlaceholder: "Discord username",
-      linkedinPlaceholder: "username or LinkedIn link",
-      instagramPlaceholder: "@username or link",
-      websitePlaceholder: "https://site.com",
-      otherLinkPlaceholder: "username, link or reference",
-      otherLabelPlaceholder: "Ex. Portfolio, Twitch...",
-      cancel: "Cancel",
-      saveContact: "Save contact",
-      saveChanges: "Save changes",
-      saving: "Saving...",
-      deleteDialogAria: "Confirm deletion",
-      deleteWarning: "This action will permanently delete the contact and cannot be undone.",
-      deleteAction: "Delete",
-      deleting: "Deleting...",
-      nameRequired: "Name is required",
-      phoneRequired: "Phone is required",
-      emailRequired: "Email is required",
-      invalidEmail: "Email format is invalid",
-      createdToast: "Contact created successfully",
-      updatedToast: "Contact updated successfully",
-      deletedToast: "Contact deleted successfully",
-      loadContactError: "Could not load the contact",
-      saveContactError: "Could not save the contact",
-      deleteContactError: "Could not delete the contact",
-      copy: "Copy",
-      copied: "Copied",
-      copyPhone: "Copy phone",
-      copyEmail: "Copy email",
-      copyError: "Could not copy",
-      requestError: "Could not complete the request",
-      idInvalid: "Invalid contact ID",
-      notFound: "Contact not found",
-      nameType: "Name must be a text string",
-      phoneType: "Phone must be a text string",
-      emailType: "Email must be a text string",
-      companyType: "Company must be a text string",
-      notesType: "Notes must be a text string",
-      serverError: "Internal server error"
-    }
-  };
-
-  const apiErrorTranslations = {
-    "ID de contacto no valido": "idInvalid",
-    "Contacto no encontrado": "notFound",
-    "El nombre es obligatorio": "nameRequired",
-    "El telefono es obligatorio": "phoneRequired",
-    "El teléfono es obligatorio": "phoneRequired",
-    "El correo es obligatorio": "emailRequired",
-    "El correo no tiene un formato valido": "invalidEmail",
-    "El correo no tiene un formato válido": "invalidEmail",
-    "El nombre debe ser una cadena de texto": "nameType",
-    "El telefono debe ser una cadena de texto": "phoneType",
-    "El teléfono debe ser una cadena de texto": "phoneType",
-    "El correo debe ser una cadena de texto": "emailType",
-    "La empresa debe ser una cadena de texto": "companyType",
-    "Las notas deben ser una cadena de texto": "notesType",
-    "Solo se permiten imagenes JPG, PNG, GIF o WEBP": "photoTypeError",
-    "La imagen no puede superar 5 MB": "photoSizeError",
-    "No se pudo subir la imagen": "photoUploadError",
-    "Los links extra deben enviarse como una lista": "extraLinksTypeError",
-    "Cada link extra debe ser un objeto": "extraLinksTypeError",
-    "No puedes agregar mas de 10 links extra": "extraLinkMaxError",
-    "El tipo de link extra no es valido": "extraLinkInvalidType",
-    "El valor del link extra es obligatorio": "extraLinkValueRequired",
-    "La URL del link extra debe empezar con http:// o https://": "extraLinkInvalidUrl",
-    "Error interno del servidor": "serverError",
-    "No se pudo completar la solicitud": "requestError"
-  };
+  const { translations, apiErrorTranslations } = window.DirConI18n;
 
   const state = {
     contacts: [],
@@ -359,6 +45,7 @@
     drawerIsClosing: false,
     drawerCloseTimer: null,
     modal: null,
+    modalShouldAnimate: false,
     formMode: "create",
     formDraft: emptyForm(),
     formErrors: {},
@@ -1036,7 +723,9 @@
 
   function renderModal() {
     if (state.modal === "form") {
-      dom.modalRoot.innerHTML = formModal();
+      const shouldAnimate = state.modalShouldAnimate;
+      dom.modalRoot.innerHTML = formModal(shouldAnimate);
+      state.modalShouldAnimate = false;
       if (state.formShouldFocus) {
         state.formShouldFocus = false;
         setTimeout(() => {
@@ -1059,23 +748,27 @@
     }
 
     if (state.modal === "delete" && state.selectedContact) {
-      dom.modalRoot.innerHTML = deleteModal(state.selectedContact);
+      const shouldAnimate = state.modalShouldAnimate;
+      dom.modalRoot.innerHTML = deleteModal(state.selectedContact, shouldAnimate);
+      state.modalShouldAnimate = false;
       return;
     }
 
     dom.modalRoot.innerHTML = "";
   }
 
-  function formModal() {
+  function formModal(shouldAnimate) {
     const isEdit = state.formMode === "edit";
     const title = isEdit ? t("editTitle") : t("createTitle");
     const submitLabel = isEdit ? t("saveChanges") : t("saveContact");
     const contact = state.selectedContact;
+    const backdropClass = shouldAnimate ? " animate-fade-in" : "";
+    const modalClass = shouldAnimate ? " animate-scale-in" : "";
 
     return `
-      <div class="backdrop backdrop--modal animate-fade-in" data-action="close-modal"></div>
+      <div class="backdrop backdrop--modal${backdropClass}" data-action="close-modal"></div>
       <div class="modal-layer" role="dialog" aria-modal="true" aria-label="${title}">
-        <section class="modal animate-scale-in">
+        <section class="modal${modalClass}">
           <header class="modal__header">
             ${isEdit && contact ? avatar(contact.name, "md", getContactPhotoUrl(contact)) : ""}
             <div class="modal__title">
@@ -1252,11 +945,14 @@
     `;
   }
 
-  function deleteModal(contact) {
+  function deleteModal(contact, shouldAnimate) {
+    const backdropClass = shouldAnimate ? " animate-fade-in" : "";
+    const modalClass = shouldAnimate ? " animate-scale-in" : "";
+
     return `
-      <div class="backdrop backdrop--danger animate-fade-in" data-action="close-modal"></div>
+      <div class="backdrop backdrop--danger${backdropClass}" data-action="close-modal"></div>
       <div class="modal-layer modal-layer--danger" role="dialog" aria-modal="true" aria-label="${t("deleteDialogAria")}">
-        <section class="modal modal--delete animate-scale-in">
+        <section class="modal modal--delete${modalClass}">
           <span class="delete-icon" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path d="M11 8v5M11 15.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
@@ -1383,6 +1079,7 @@
     const contact = state.selectedContact;
     revokePhotoPreview();
     state.modal = "form";
+    state.modalShouldAnimate = true;
     state.formMode = mode;
     state.formErrors = {};
     state.formShouldFocus = true;
@@ -1412,6 +1109,7 @@
     if (state.saving) return;
     revokePhotoPreview();
     state.modal = null;
+    state.modalShouldAnimate = false;
     state.formErrors = {};
     state.formShouldFocus = false;
     state.formDraft = emptyForm();
@@ -1526,6 +1224,7 @@
 
       revokePhotoPreview();
       state.modal = null;
+      state.modalShouldAnimate = false;
       state.formErrors = {};
       state.formShouldFocus = false;
       state.formDraft = emptyForm();
@@ -1553,6 +1252,7 @@
       state.drawerAnimationUntil = 0;
       state.drawerIsClosing = false;
       state.modal = null;
+      state.modalShouldAnimate = false;
       showToast(t("deletedToast"));
       await loadContacts(state.currentSearch);
     } catch (error) {
@@ -1598,99 +1298,6 @@
     } catch {
       showToast(t("copyError"), "error");
     }
-  }
-
-  function iconClose(size) {
-    return `
-      <svg width="${size}" height="${size}" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconPhone() {
-    return `
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M5.2 2H3a1 1 0 00-1 1c0 6.075 4.925 11 11 11a1 1 0 001-1v-2.2a1 1 0 00-.726-.962l-2.1-.6a1 1 0 00-1.046.302l-.748.898A8.008 8.008 0 015.36 6.62l.898-.748a1 1 0 00.303-1.046l-.6-2.1A1 1 0 005.2 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconMail() {
-    return `
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"></rect>
-        <path d="M1.5 5l6.5 4.5L14.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconLink() {
-    return `
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M6.6 9.4a3 3 0 004.2 0l1.8-1.8a3 3 0 00-4.2-4.2l-.7.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
-        <path d="M9.4 6.6a3 3 0 00-4.2 0L3.4 8.4a3 3 0 004.2 4.2l.7-.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconPlusSmall() {
-    return `
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconCamera() {
-    return `
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-        <path d="M5.2 3.2l.7-1.1h3.2l.7 1.1h2.1A1.6 1.6 0 0113.5 4.8v6.1a1.6 1.6 0 01-1.6 1.6H3.1a1.6 1.6 0 01-1.6-1.6V4.8a1.6 1.6 0 011.6-1.6h2.1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path>
-        <circle cx="7.5" cy="8" r="2.4" stroke="currentColor" stroke-width="1.3"></circle>
-      </svg>
-    `;
-  }
-
-  function iconTrash() {
-    return `
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-        <path d="M2.3 4h10.4M6 1.9h3M5.2 4v7.4M7.5 4v7.4M9.8 4v7.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path>
-        <path d="M3.6 4l.5 8.2a1.3 1.3 0 001.3 1.2h4.2a1.3 1.3 0 001.3-1.2l.5-8.2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconCopy() {
-    return `
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <rect x="4.5" y="4.5" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.3"></rect>
-        <path d="M4.5 9.5H3a1.5 1.5 0 01-1.5-1.5V3A1.5 1.5 0 013 1.5h5A1.5 1.5 0 019.5 3v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconCheck() {
-    return `
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M2 7l4 4 6-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconCheckTiny() {
-    return `
-      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-        <path d="M1.5 5.5l3 3 5-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-      </svg>
-    `;
-  }
-
-  function iconWarningTiny() {
-    return `
-      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-        <path d="M5.5 2v4M5.5 8v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
-      </svg>
-    `;
   }
 
   dom.newContactButton.addEventListener("click", () => {
@@ -1773,6 +1380,7 @@
     if (action === "edit-contact") openForm("edit");
     if (action === "confirm-delete") {
       state.modal = "delete";
+      state.modalShouldAnimate = true;
       render();
     }
     if (action === "close-modal") closeModal();
