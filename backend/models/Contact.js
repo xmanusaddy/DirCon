@@ -1,5 +1,36 @@
 const mongoose = require("mongoose");
 
+const extraLinkSchema = new mongoose.Schema(
+    {
+        type: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        label: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        value: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        url: {
+            type: String,
+            trim: true,
+            default: ""
+        }
+    },
+    {
+        _id: false
+    }
+);
+
 const contactSchema = new mongoose.Schema(
     {
         name: {
@@ -35,6 +66,17 @@ const contactSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: ""
+        },
+
+        photoUrl: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        extraLinks: {
+            type: [extraLinkSchema],
+            default: []
         }
     },
     {
