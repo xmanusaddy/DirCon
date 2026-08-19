@@ -43,6 +43,16 @@
     "image/webp"
   ]);
   const photoMaxSize = 5 * 1024 * 1024;
+  const extraLinkTypes = [
+    { value: "github", labelKey: "githubLink", placeholderKey: "githubPlaceholder" },
+    { value: "discord", labelKey: "discordLink", placeholderKey: "discordPlaceholder" },
+    { value: "linkedin", labelKey: "linkedinLink", placeholderKey: "linkedinPlaceholder" },
+    { value: "instagram", labelKey: "instagramLink", placeholderKey: "instagramPlaceholder" },
+    { value: "website", labelKey: "websiteLink", placeholderKey: "websitePlaceholder" },
+    { value: "other", labelKey: "otherLink", placeholderKey: "otherLinkPlaceholder" }
+  ];
+  const extraLinkTypeValues = extraLinkTypes.map((type) => type.value);
+  const maxExtraLinks = 10;
 
   const translations = {
     es: {
@@ -116,6 +126,32 @@
       photoTypeError: "Solo puedes subir JPG, PNG, GIF o WEBP",
       photoSizeError: "La imagen no puede superar 5 MB",
       photoUploadError: "No se pudo subir la imagen",
+      extraLinksLabel: "Links extra",
+      extraLinksHelp: "Agrega redes o usuarios donde tambien puedan contactar a esta persona.",
+      addExtraLink: "Agregar link",
+      removeExtraLink: "Quitar link",
+      extraLinkTypeLabel: "Tipo",
+      extraLinkValueLabel: "Usuario o link",
+      extraLinkCustomLabel: "Nombre",
+      extraLinkValueRequired: "Completa el usuario o link, o elimina esta fila",
+      extraLinkMaxError: "Solo puedes agregar hasta 10 links extra",
+      extraLinksTypeError: "Los links extra deben enviarse como una lista",
+      extraLinkInvalidType: "El tipo de link extra no es valido",
+      extraLinkInvalidUrl: "La URL del link extra debe empezar con http:// o https://",
+      contactLinksLabel: "Links extra",
+      githubLink: "GitHub",
+      discordLink: "Discord",
+      linkedinLink: "LinkedIn",
+      instagramLink: "Instagram",
+      websiteLink: "Sitio web",
+      otherLink: "Otro",
+      githubPlaceholder: "usuario o https://github.com/usuario",
+      discordPlaceholder: "usuario de Discord",
+      linkedinPlaceholder: "usuario o link de LinkedIn",
+      instagramPlaceholder: "@usuario o link",
+      websitePlaceholder: "https://sitio.com",
+      otherLinkPlaceholder: "usuario, enlace o referencia",
+      otherLabelPlaceholder: "Ej. Portfolio, Twitch...",
       cancel: "Cancelar",
       saveContact: "Guardar contacto",
       saveChanges: "Guardar cambios",
@@ -220,6 +256,32 @@
       photoTypeError: "You can only upload JPG, PNG, GIF or WEBP",
       photoSizeError: "The image cannot be larger than 5 MB",
       photoUploadError: "Could not upload the image",
+      extraLinksLabel: "Extra links",
+      extraLinksHelp: "Add social profiles or usernames where this person can also be reached.",
+      addExtraLink: "Add link",
+      removeExtraLink: "Remove link",
+      extraLinkTypeLabel: "Type",
+      extraLinkValueLabel: "Username or link",
+      extraLinkCustomLabel: "Name",
+      extraLinkValueRequired: "Complete the username or link, or remove this row",
+      extraLinkMaxError: "You can add up to 10 extra links",
+      extraLinksTypeError: "Extra links must be sent as a list",
+      extraLinkInvalidType: "The extra link type is invalid",
+      extraLinkInvalidUrl: "The extra link URL must start with http:// or https://",
+      contactLinksLabel: "Extra links",
+      githubLink: "GitHub",
+      discordLink: "Discord",
+      linkedinLink: "LinkedIn",
+      instagramLink: "Instagram",
+      websiteLink: "Website",
+      otherLink: "Other",
+      githubPlaceholder: "username or https://github.com/username",
+      discordPlaceholder: "Discord username",
+      linkedinPlaceholder: "username or LinkedIn link",
+      instagramPlaceholder: "@username or link",
+      websitePlaceholder: "https://site.com",
+      otherLinkPlaceholder: "username, link or reference",
+      otherLabelPlaceholder: "Ex. Portfolio, Twitch...",
       cancel: "Cancel",
       saveContact: "Save contact",
       saveChanges: "Save changes",
@@ -273,6 +335,12 @@
     "Solo se permiten imagenes JPG, PNG, GIF o WEBP": "photoTypeError",
     "La imagen no puede superar 5 MB": "photoSizeError",
     "No se pudo subir la imagen": "photoUploadError",
+    "Los links extra deben enviarse como una lista": "extraLinksTypeError",
+    "Cada link extra debe ser un objeto": "extraLinksTypeError",
+    "No puedes agregar mas de 10 links extra": "extraLinkMaxError",
+    "El tipo de link extra no es valido": "extraLinkInvalidType",
+    "El valor del link extra es obligatorio": "extraLinkValueRequired",
+    "La URL del link extra debe empezar con http:// o https://": "extraLinkInvalidUrl",
     "Error interno del servidor": "serverError",
     "No se pudo completar la solicitud": "requestError"
   };
@@ -460,7 +528,8 @@
       photoPreviewUrl: "",
       existingPhotoUrl: "",
       photoError: "",
-      removePhoto: false
+      removePhoto: false,
+      extraLinks: []
     };
   }
 
@@ -489,6 +558,83 @@
 
   function getContactPhotoUrl(contact) {
     return contact && contact.photoUrl ? api.getAssetUrl(contact.photoUrl) : "";
+  }
+
+  function defaultExtraLink() {
+    return {
+      type: "github",
+      label: "",
+      value: ""
+    };
+  }
+
+  function getExtraLinkType(type) {
+    return extraLinkTypes.find((option) => option.value === type) || extraLinkTypes[0];
+  }
+
+  function getExtraLinkLabel(link) {
+    const type = getExtraLinkType(link.type);
+    const customLabel = String(link.label || "").trim();
+
+    return link.type === "other" && customLabel ? customLabel : t(type.labelKey);
+  }
+
+  function normalizeProfileHandle(value, pattern) {
+    return String(value || "")
+      .trim()
+      .replace(/^@+/, "")
+      .replace(pattern, "")
+      .replace(/\/.*$/, "");
+  }
+
+  function buildExtraLinkUrl(link) {
+    const value = String(link.value || "").trim();
+    const type = link.type;
+
+    if (!value || type === "discord") return "";
+    if (/^https?:\/\//i.test(value)) return value;
+
+    if (type === "github") {
+      const handle = normalizeProfileHandle(value, /^https?:\/\/(www\.)?github\.com\//i);
+      return handle ? `https://github.com/${encodeURIComponent(handle)}` : "";
+    }
+
+    if (type === "linkedin") {
+      const handle = normalizeProfileHandle(value, /^https?:\/\/(www\.)?linkedin\.com\/in\//i);
+      return handle ? `https://www.linkedin.com/in/${encodeURIComponent(handle)}` : "";
+    }
+
+    if (type === "instagram") {
+      const handle = normalizeProfileHandle(value, /^https?:\/\/(www\.)?instagram\.com\//i);
+      return handle ? `https://instagram.com/${encodeURIComponent(handle)}` : "";
+    }
+
+    if (type === "website") {
+      return `https://${value.replace(/^\/+/, "")}`;
+    }
+
+    if (!/\s/.test(value) && value.includes(".")) {
+      return `https://${value.replace(/^\/+/, "")}`;
+    }
+
+    return "";
+  }
+
+  function normalizeExtraLinks(links) {
+    return links.map((link) => {
+      const type = extraLinkTypeValues.includes(link.type) ? link.type : "other";
+      const normalized = {
+        type,
+        label: String(link.label || "").trim(),
+        value: String(link.value || "").trim()
+      };
+
+      return {
+        ...normalized,
+        label: normalized.label || getExtraLinkLabel(normalized),
+        url: buildExtraLinkUrl(normalized)
+      };
+    }).filter((link) => link.value);
   }
 
   function avatar(name, size, photoUrl = "") {
@@ -815,6 +961,7 @@
         <div class="drawer__details">
           ${contactField(t("phoneLabel"), contact.phone, iconPhone(), `tel:${contact.phone}`, "phone")}
           ${contactField(t("emailLabel"), contact.email, iconMail(), `mailto:${contact.email}`, "email")}
+          ${extraLinksList(contact.extraLinks || [])}
           ${contact.notes ? `
             <div class="notes-block">
               <p class="notes-block__label">${t("notesLabel")}</p>
@@ -850,6 +997,43 @@
     `;
   }
 
+  function extraLinksList(links) {
+    const normalizedLinks = normalizeExtraLinks(links);
+    if (normalizedLinks.length === 0) return "";
+
+    return `
+      <section class="extra-links-list" aria-label="${escapeHtml(t("contactLinksLabel"))}">
+        <p class="extra-links-list__label">${escapeHtml(t("contactLinksLabel"))}</p>
+        <div class="extra-links-list__items">
+          ${normalizedLinks.map(extraLinkField).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  function extraLinkField(link) {
+    const label = getExtraLinkLabel(link);
+    const href = link.url || buildExtraLinkUrl(link);
+    const value = link.value || "";
+
+    return `
+      <div class="extra-link-field">
+        <span class="detail-field__icon" aria-hidden="true">${iconLink()}</span>
+        <div class="extra-link-field__body">
+          <span class="extra-link-field__label">${escapeHtml(label)}</span>
+          ${href ? `
+            <a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${escapeHtml(value)}</a>
+          ` : `
+            <span class="extra-link-field__value">${escapeHtml(value)}</span>
+          `}
+        </div>
+        <button class="icon-button copy-button" type="button" data-action="copy" data-value="${escapeHtml(value)}" aria-label="${escapeHtml(`${t("copy")} ${label}`)}" title="${t("copy")}">
+          ${iconCopy()}
+        </button>
+      </div>
+    `;
+  }
+
   function renderModal() {
     if (state.modal === "form") {
       dom.modalRoot.innerHTML = formModal();
@@ -864,6 +1048,8 @@
                 ? "#email"
                 : state.formErrors.photo
                   ? "#photo"
+                  : state.formErrors.extraLinks
+                    ? "#extraLinkValue0, #addExtraLinkButton"
                   : "#name";
           const input = document.querySelector(target);
           if (input && !state.saving) input.focus();
@@ -911,6 +1097,7 @@
               </div>
               ${fieldInput("company", t("companyLabel"), "text", t("companyPlaceholder"), false, "organization")}
               ${fieldTextarea("notes", t("notesLabel"), t("notesPlaceholder"))}
+              ${extraLinksField()}
             </div>
 
             <div class="form-actions">
@@ -974,6 +1161,69 @@
             ${fieldError("photo", error)}
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  function extraLinksField() {
+    const links = state.formDraft.extraLinks || [];
+    const error = state.formErrors.extraLinks || "";
+
+    return `
+      <section class="extra-links-editor ${error ? "has-error" : ""}" aria-labelledby="extraLinksTitle">
+        <div class="extra-links-editor__header">
+          <div>
+            <h3 id="extraLinksTitle">${escapeHtml(t("extraLinksLabel"))}</h3>
+            <p>${escapeHtml(t("extraLinksHelp"))}</p>
+          </div>
+          <button class="btn btn--ghost extra-links-editor__add" id="addExtraLinkButton" type="button" data-action="add-extra-link" ${links.length >= maxExtraLinks || state.saving ? "disabled" : ""}>
+            ${iconPlusSmall()}
+            ${t("addExtraLink")}
+          </button>
+        </div>
+
+        ${links.length ? `
+          <div class="extra-links-editor__rows">
+            ${links.map(extraLinkRow).join("")}
+          </div>
+        ` : ""}
+
+        ${fieldError("extraLinks", error)}
+      </section>
+    `;
+  }
+
+  function extraLinkRow(link, index) {
+    const type = getExtraLinkType(link.type);
+    const customLabel = String(link.label || "");
+    const value = String(link.value || "");
+
+    return `
+      <div class="extra-link-row" data-extra-link-index="${index}">
+        <label class="extra-link-row__type">
+          <span>${escapeHtml(t("extraLinkTypeLabel"))}</span>
+          <select name="extraLinkType${index}" data-extra-link-field="type" data-extra-link-index="${index}" ${state.saving ? "disabled" : ""}>
+            ${extraLinkTypes.map((option) => `
+              <option value="${option.value}" ${option.value === type.value ? "selected" : ""}>${escapeHtml(t(option.labelKey))}</option>
+            `).join("")}
+          </select>
+        </label>
+
+        ${type.value === "other" ? `
+          <label class="extra-link-row__label">
+            <span>${escapeHtml(t("extraLinkCustomLabel"))}</span>
+            <input name="extraLinkLabel${index}" type="text" value="${escapeHtml(customLabel)}" placeholder="${escapeHtml(t("otherLabelPlaceholder"))}" data-extra-link-field="label" data-extra-link-index="${index}" ${state.saving ? "disabled" : ""}>
+          </label>
+        ` : ""}
+
+        <label class="extra-link-row__value">
+          <span>${escapeHtml(t("extraLinkValueLabel"))}</span>
+          <input id="extraLinkValue${index}" name="extraLinkValue${index}" type="text" value="${escapeHtml(value)}" placeholder="${escapeHtml(t(type.placeholderKey))}" data-extra-link-field="value" data-extra-link-index="${index}" ${state.saving ? "disabled" : ""}>
+        </label>
+
+        <button class="icon-button extra-link-row__remove" type="button" data-action="remove-extra-link" data-extra-link-index="${index}" aria-label="${escapeHtml(t("removeExtraLink"))}" title="${escapeHtml(t("removeExtraLink"))}" ${state.saving ? "disabled" : ""}>
+          ${iconTrash()}
+        </button>
       </div>
     `;
   }
@@ -1079,6 +1329,56 @@
     render();
   }
 
+  function addExtraLink() {
+    if (state.saving) return;
+
+    const links = state.formDraft.extraLinks || [];
+
+    if (links.length >= maxExtraLinks) {
+      state.formErrors.extraLinks = t("extraLinkMaxError");
+      state.formShouldFocus = true;
+      render();
+      return;
+    }
+
+    state.formDraft.extraLinks = [...links, defaultExtraLink()];
+    delete state.formErrors.extraLinks;
+    render();
+  }
+
+  function removeExtraLink(index) {
+    if (state.saving) return;
+
+    state.formDraft.extraLinks = (state.formDraft.extraLinks || []).filter((_, currentIndex) => currentIndex !== index);
+    delete state.formErrors.extraLinks;
+    render();
+  }
+
+  function updateExtraLink(index, field, value, shouldRender = false) {
+    const links = [...(state.formDraft.extraLinks || [])];
+    const current = links[index];
+
+    if (!current) return;
+
+    if (field === "type") {
+      current.type = extraLinkTypeValues.includes(value) ? value : "other";
+      if (current.type !== "other") current.label = "";
+    } else if (field === "label" || field === "value") {
+      current[field] = value;
+    }
+
+    links[index] = current;
+    state.formDraft.extraLinks = links;
+    delete state.formErrors.extraLinks;
+
+    const errorNode = document.querySelector("#extraLinksError");
+    if (errorNode) errorNode.remove();
+    const editor = document.querySelector(".extra-links-editor");
+    if (editor) editor.classList.remove("has-error");
+
+    if (shouldRender) render();
+  }
+
   function openForm(mode) {
     const contact = state.selectedContact;
     revokePhotoPreview();
@@ -1097,7 +1397,12 @@
           photoPreviewUrl: "",
           existingPhotoUrl: contact.photoUrl || "",
           photoError: "",
-          removePhoto: false
+          removePhoto: false,
+          extraLinks: (contact.extraLinks || []).map((link) => ({
+            type: extraLinkTypeValues.includes(link.type) ? link.type : "other",
+            label: link.label || "",
+            value: link.value || link.url || ""
+          }))
         }
       : emptyForm();
     render();
@@ -1126,7 +1431,8 @@
       photoPreviewUrl: state.formDraft.photoPreviewUrl,
       existingPhotoUrl: state.formDraft.existingPhotoUrl,
       photoError: state.formDraft.photoError,
-      removePhoto: state.formDraft.removePhoto
+      removePhoto: state.formDraft.removePhoto,
+      extraLinks: state.formDraft.extraLinks || []
     };
   }
 
@@ -1148,6 +1454,12 @@
       errors.photo = t("photoSizeError");
     }
 
+    if ((data.extraLinks || []).length > maxExtraLinks) {
+      errors.extraLinks = t("extraLinkMaxError");
+    } else if ((data.extraLinks || []).some((link) => !String(link.value || "").trim())) {
+      errors.extraLinks = t("extraLinkValueRequired");
+    }
+
     return errors;
   }
 
@@ -1159,7 +1471,8 @@
       company: data.company.trim(),
       notes: data.notes.trim(),
       photoFile: data.photoFile,
-      removePhoto: data.removePhoto
+      removePhoto: data.removePhoto,
+      extraLinks: normalizeExtraLinks(data.extraLinks || [])
     };
   }
 
@@ -1172,7 +1485,8 @@
           : normalizedMessage.includes("empresa") || normalizedMessage.includes("company") ? "company"
             : normalizedMessage.includes("notas") || normalizedMessage.includes("notes") ? "notes"
               : normalizedMessage.includes("imagen") || normalizedMessage.includes("image") || normalizedMessage.includes("jpg") || normalizedMessage.includes("png") || normalizedMessage.includes("webp") ? "photo"
-                : null;
+                : normalizedMessage.includes("link") || normalizedMessage.includes("url") ? "extraLinks"
+                  : null;
 
     if (field) {
       state.formErrors = { [field]: translatedMessage };
@@ -1307,6 +1621,23 @@
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
         <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"></rect>
         <path d="M1.5 5l6.5 4.5L14.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    `;
+  }
+
+  function iconLink() {
+    return `
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M6.6 9.4a3 3 0 004.2 0l1.8-1.8a3 3 0 00-4.2-4.2l-.7.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M9.4 6.6a3 3 0 00-4.2 0L3.4 8.4a3 3 0 004.2 4.2l.7-.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    `;
+  }
+
+  function iconPlusSmall() {
+    return `
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
       </svg>
     `;
   }
@@ -1446,6 +1777,8 @@
     }
     if (action === "close-modal") closeModal();
     if (action === "remove-photo") removeFormPhoto();
+    if (action === "add-extra-link") addExtraLink();
+    if (action === "remove-extra-link") removeExtraLink(Number(actionTarget.dataset.extraLinkIndex));
     if (action === "delete-contact") deleteSelectedContact();
     if (action === "copy") copyValue(actionTarget);
   });
@@ -1461,6 +1794,15 @@
     if (!field) return;
     if (field.type === "file") return;
 
+    if (field.dataset.extraLinkField) {
+      updateExtraLink(
+        Number(field.dataset.extraLinkIndex),
+        field.dataset.extraLinkField,
+        field.value
+      );
+      return;
+    }
+
     state.formDraft[field.name] = field.value;
     if (state.formErrors[field.name]) {
       delete state.formErrors[field.name];
@@ -1472,9 +1814,20 @@
 
   document.addEventListener("change", (event) => {
     const photoInput = event.target.closest("#contactForm input[type='file'][name='photo']");
-    if (!photoInput) return;
+    if (photoInput) {
+      setFormPhoto(photoInput.files[0]);
+      return;
+    }
 
-    setFormPhoto(photoInput.files[0]);
+    const extraLinkSelect = event.target.closest("#contactForm select[data-extra-link-field='type']");
+    if (!extraLinkSelect) return;
+
+    updateExtraLink(
+      Number(extraLinkSelect.dataset.extraLinkIndex),
+      "type",
+      extraLinkSelect.value,
+      true
+    );
   });
 
   document.addEventListener("error", (event) => {

@@ -31,7 +31,8 @@
       phone: contact.phone,
       email: contact.email,
       company: contact.company,
-      notes: contact.notes
+      notes: contact.notes,
+      extraLinks: contact.extraLinks || []
     };
   }
 
@@ -44,7 +45,7 @@
     const clean = cleanContact(contact);
 
     Object.entries(clean).forEach(([key, value]) => {
-      data.append(key, value || "");
+      data.append(key, key === "extraLinks" ? JSON.stringify(value || []) : value || "");
     });
 
     if (contact.photoFile) {
